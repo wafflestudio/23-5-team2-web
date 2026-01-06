@@ -19,8 +19,8 @@ jobs:
         with:
           node-version: '20.11.1'
       - name: Install dependencies
-        run: yarn install
-      - name: Build
-        run: yarn build
+        run: yarn install --immutable
       - name: Check
         run: yarn check-all
+      - name: Build
+        run: yarn build
