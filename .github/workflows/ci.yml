@@ -20,5 +20,7 @@ jobs:
           node-version: '20.11.1'
       - name: Install dependencies
         run: yarn install
+      - name: Build
+        run: yarn build
       - name: Check
         run: yarn check-all
