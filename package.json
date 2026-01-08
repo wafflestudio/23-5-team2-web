@@ -22,7 +22,6 @@
     "@types/node": "^22.15.29",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
-    "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react-swc": "^3.9.0",
     "knip": "^5.59.1",
     "typescript": "~5.8.3",
