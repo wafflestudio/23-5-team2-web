@@ -1,19 +1,33 @@
-## 📝 작업 내용
-> 이번 PR에서 작업한 내용을 간략히 설명해주세요.
-- 
-- 
+<!--
+Please follow the gitmoji convention for commit messages.
+Common gitmoji examples for quick copy-paste:
+✨  :sparkles:  → Introduce new features
+📝  :memo:      → Add or update documentation
+♻️  :recycle:   → Polish code / Refactor code
+⚡  :zap:       → Improve performance / Fix a bug
+✅  :white_check_mark: → Add or update tests
+🔧  :wrench:   → Add or update configuration files
+🔒  :lock:     → Fix security issues
+-->
 
-## 🔗 관련 이슈
-- Resolved: #이슈번호
+### 이 PR이 어떤 기능을 추가했나요?
 
-## 📸 스크린샷 (선택)
-> UI 변경 사항이 있다면 스크린샷이나 GIF를 첨부해주세요.
+<!-- 구현한 기능 또는 개선 사항에 대해 설명해 주세요 -->
 
-## 💬 리뷰 요구사항 (선택)
-> 리뷰어가 특히 집중해서 봐주었으면 하는 부분이 있다면 작성해주세요.
-- 예: 이 부분의 비즈니스 로직이 효율적인지 궁금합니다.
+---
 
-## ✅ 체크리스트
-- [ ] 브랜치 전략(dev/main)에 맞게 타겟 브랜치를 설정했나요?
-- [ ] 관련 없는 코드 수정은 없나요? (코드 클리닝 등)
-- [ ] 로컬에서 빌드 및 테스트를 통과했나요?
+### 주의해야 할 점이나 유의사항이 있나요?
+
+<!-- 없으면 비워주세요 -->
+
+---
+
+### 관련 이슈 (선택)
+
+<!-- Resolved: #이슈번호 -->
+
+---
+
+### 📸 스크린샷 (선택)
+
+<!-- UI 변경 사항이 있다면 스크린샷이나 GIF를 첨부해주세요. -->
