@@ -1,15 +1,20 @@
-import { useState } from 'react';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import './style.css';
+import Footer from './components/Footer';
+import Header from './components/Header';
+import HomePage from './pages/HomePage';
 
 const App = () => {
-  const [count, setCount] = useState(0);
-
   return (
-    <div>
-      <p>Hello World!</p>
-      <button onClick={() => setCount((count) => count + 1)}>
-        Count is {count}
-      </button>
-    </div>
+    <Router>
+      <Header />
+      <main>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+        </Routes>
+      </main>
+      <Footer />
+    </Router>
   );
 };
 
