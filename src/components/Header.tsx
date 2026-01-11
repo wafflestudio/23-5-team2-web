@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { API_ENDPOINTS } from '../constants/api';
-import { useUserStore } from '../store/useUserStore';
+// import { useUserStore } from '../store/useUserStore';
 
 const Header = () => {
   // console.log('VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
   // console.log('전체 환경변수:', import.meta.env);
-  const { user, clearUser } = useUserStore(); // TODO: 유저 상태 관리 로직 추가
+  
+  // const { user, clearUser } = useUserStore(); // TODO: 유저 상태 관리 로직 추가
 
   const handleGoogleLogin = () => {
     const loginUrl = API_ENDPOINTS.AUTH.GOOGLE_LOGIN;

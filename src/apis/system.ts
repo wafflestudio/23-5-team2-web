@@ -13,7 +13,7 @@ export const systemApi = {
     // 공통 api 인스턴스 대신, 설정을 초기화한 axios를 직접 사용합니다.
     // baseURL이 /api/v1 처럼 되어있을 경우를 대비해 전체 URL을 쓰거나 설정을 비웁니다.
     const response = await axios.get<HealthResponse>(
-      `https://waffle.tteokgook1.net${API_ENDPOINTS.SYSTEM.HEALTH}`, 
+      API_ENDPOINTS.SYSTEM.HEALTH, 
       {
         timeout: 2000, // 헬스 체크는 2초 안에 안 오면 문제가 있는 것
       }
