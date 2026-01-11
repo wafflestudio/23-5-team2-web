@@ -13,17 +13,19 @@ interface UserState {
 
 export const useUserStore = create<UserState>((set) => ({
   user: null,
-  isLoading: true,
+  isLoading: true, // 초기값은 true
 
   fetchUser: async () => {
     try {
       set({ isLoading: true });
+      // 토큰이 쿠키에 있으므로, 그냥 getMe()를 호출하면 브라우저가 쿠키를 실어 보냅니다.
       const { data } = await authApi.getMe();
       set({ user: data, isLoading: false });
-    } catch {
+    } catch (error) {
+      console.error('유저 정보 가져오기 실패:', error);
       set({ user: null, isLoading: false });
     }
   },
 
-  clearUser: () => set({ user: null }),
+  clearUser: () => set({ user: null, isLoading: false }),
 }));

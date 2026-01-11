@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../apis/auth';
+// 1. 구글 버튼 컴포넌트 임포트
+import GoogleLoginButton from '../components/GoogleLoginButton';
 import type { AuthRequest } from '../types/auth';
 
 interface RegisterForm extends AuthRequest {
@@ -34,7 +36,6 @@ const RegisterPage = () => {
 
     try {
       await authApi.registerLocal(registerFormData);
-      alert('회원가입이 완료되었습니다!');
       navigate('/login');
     } catch (error) {
       console.error(error);
@@ -43,7 +44,14 @@ const RegisterPage = () => {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div
+      style={{
+        padding: '2rem',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}
+    >
       <h2>회원가입</h2>
       <form
         onSubmit={handleSubmit}
@@ -51,6 +59,7 @@ const RegisterPage = () => {
           display: 'flex',
           flexDirection: 'column',
           gap: '15px',
+          width: '100%',
           maxWidth: '300px',
         }}
       >
@@ -118,7 +127,6 @@ const RegisterPage = () => {
           )}
         </div>
 
-        {/* 2. 모든 조건이 맞지 않으면 버튼 비활성화(disabled) */}
         <button
           type="submit"
           disabled={!isFormValid}
@@ -133,6 +141,34 @@ const RegisterPage = () => {
           회원가입
         </button>
       </form>
+
+      {/* 구분선 추가 */}
+      <div
+        style={{
+          margin: '1.5rem 0',
+          width: '100%',
+          maxWidth: '300px',
+          textAlign: 'center',
+          borderBottom: '1px solid #ccc',
+          lineHeight: '0.1em',
+        }}
+      >
+        <span
+          style={{
+            background: '#fff',
+            padding: '0 10px',
+            color: '#888',
+            fontSize: '14px',
+          }}
+        >
+          또는
+        </span>
+      </div>
+
+      {/* 구글 로그인/회원가입 버튼 추가 */}
+      <div style={{ width: '100%', maxWidth: '300px' }}>
+        <GoogleLoginButton text="구글로 시작하기" />
+      </div>
     </div>
   );
 };

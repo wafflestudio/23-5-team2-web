@@ -8,23 +8,16 @@ export const authApi = {
     api.post<User>(API_ENDPOINTS.AUTH.REGISTER, data),
 
   // 로컬 로그인
-  loginLocal: (data: AuthRequest) =>
-    api.post<User>(API_ENDPOINTS.AUTH.LOGIN, data),
+  // 백엔드가 성공 시 브라우저 쿠키(Set-Cookie)에 토큰을 직접 심어주므로,
+  // 프론트엔드에서는 응답 바디에서 토큰을 꺼내 저장할 필요가 없습니다.
+  loginLocal: (data: AuthRequest) => api.post(API_ENDPOINTS.AUTH.LOGIN, data),
 
   // 로그아웃
-  logout: async () => {
-    try {
-      // 1. 서버에 로그아웃 알림 (토큰이 헤더에 실려 나감)
-      await api.post(API_ENDPOINTS.AUTH.LOGOUT);
-    } catch (error) {
-      // 서버에서 이미 세션이 만료되었거나 오류가 나더라도 로직은 계속 진행
-      console.error('서버 로그아웃 처리 중 오류:', error);
-    } finally {
-      // 2. 브라우저 청소 (토큰 제거)
-      localStorage.removeItem('accessToken'); // 저장된 키값에 맞게 수정
-    }
-  },
+  // 서버에 로그아웃 요청을 보내면, 서버가 쿠키를 만료(expire)시켜 브라우저에서 제거합니다.
+  logout: () => api.post(API_ENDPOINTS.AUTH.LOGOUT),
 
   // 내 정보 확인
+  // instance.ts에 withCredentials: true 설정이 되어있다면,
+  // 브라우저가 자동으로 쿠키를 헤더에 실어 보냅니다.
   getMe: () => api.get<User>(API_ENDPOINTS.AUTH.ME),
 };

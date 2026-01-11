@@ -1,38 +1,96 @@
-import { Link } from 'react-router-dom';
-import { API_ENDPOINTS } from '../constants/api';
-// import { useUserStore } from '../store/useUserStore';
+import { Link, useNavigate } from 'react-router-dom';
+import { authApi } from '../apis/auth';
+import { useUserStore } from '../store/useUserStore';
 
 const Header = () => {
-  // console.log('VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
-  // console.log('전체 환경변수:', import.meta.env);
+  const { user, clearUser, isLoading } = useUserStore();
+  const navigate = useNavigate();
 
-  // const { user, clearUser } = useUserStore(); // TODO: 유저 상태 관리 로직 추가
-
-  const handleGoogleLogin = () => {
-    // 1. 로그인이 끝나고 돌아올 프론트엔드 주소 (보통 메인 페이지)
-    const frontendRedirectUri = 'http://localhost:5173/'; // 혹은 배포된 도메인
-    
-    // 2. 특수문자가 포함될 수 있으므로 반드시 인코딩해야 합니다.
-    const encodedUri = encodeURIComponent(frontendRedirectUri);
-
-    // 3. 최종 URL 생성: 백엔드가 요구하는 쿼리 키(예: redirect_uri)를 확인하세요.
-    // 백엔드 개발자에게 키 이름이 'redirect_uri'인지 'state'인지 확인이 필요합니다.
-    const googleLoginUrl = `${API_ENDPOINTS.AUTH.GOOGLE_LOGIN}?redirect_uri=${encodedUri}`;
-
-    alert(googleLoginUrl);
-
-    // 4. 페이지 이동
-    window.location.href = googleLoginUrl;
+  const handleLogout = async () => {
+    await authApi.logout();
+    clearUser();
+    navigate('/');
   };
 
   return (
-    <header>
-      <div>스누보드</div>
-      <Link to="/login">로그인</Link>
-      <Link to="/register">회원가입</Link>
-      <button onClick={handleGoogleLogin}>구글 로그인 / 회원가입</button>
+    <header style={S.header}>
+      {/* 왼쪽: 서비스 이름 */}
+      <Link to="/" style={S.logo}>
+        스누보드
+      </Link>
+
+      {/* 오른쪽: 내비게이션 영역 */}
+      <nav style={S.nav}>
+        {isLoading ? (
+          <span style={S.statusText}>확인 중...</span>
+        ) : user ? (
+          <>
+            <span style={S.statusText}>
+              {/* localId가 있으면 출력, 없으면 oauthId 출력, 그것도 없으면 "사용자" 출력 */}
+              <strong>{user.localId || user.oauthId || '사용자'}</strong>
+            </span>
+            <button onClick={handleLogout} style={S.textLink}>
+              로그아웃
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login" style={S.textLink}>
+              로그인
+            </Link>
+            <Link to="/register" style={S.textLink}>
+              회원가입
+            </Link>
+          </>
+        )}
+      </nav>
     </header>
   );
+};
+
+// 2. 스타일 정의 (JSX를 깨끗하게 유지)
+const S = {
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '1rem 5%',
+    backgroundColor: '#fff',
+    borderBottom: '1px solid #ddd',
+    width: '100%',
+    boxSizing: 'border-box' as const,
+  },
+  logo: {
+    fontSize: '1.25rem',
+    fontWeight: 'bold',
+    textDecoration: 'none',
+    color: '#000',
+    flexShrink: 0,
+  },
+  nav: {
+    display: 'flex',
+    gap: '15px',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  statusText: {
+    fontSize: '14px',
+    color: '#555',
+    whiteSpace: 'nowrap' as const,
+  },
+  textLink: {
+    // 버튼 기본 스타일 초기화
+    background: 'none',
+    border: 'none',
+    padding: 0,
+    cursor: 'pointer',
+    // 텍스트 스타일 (Link와 통일)
+    fontSize: '16px',
+    color: '#333',
+    textDecoration: 'none',
+    fontFamily: 'inherit',
+    whiteSpace: 'nowrap' as const,
+  },
 };
 
 export default Header;

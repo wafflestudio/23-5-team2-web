@@ -12,18 +12,11 @@ import { useUserStore } from './store/useUserStore';
 const App = () => {
   // Zustand 스토어에서 fetchUser 함수를 가져옵니다.
   const fetchUser = useUserStore((state) => state.fetchUser);
-  const isLoading = useUserStore((state) => state.isLoading);
 
   useEffect(() => {
     // 앱이 마운트될 때 딱 한 번 실행되어 로그인 상태를 확인합니다.
     fetchUser();
   }, [fetchUser]);
-
-  // 유저 정보를 가져오는 동안 화면 전체가 깜빡이는 것을 방지하기 위해
-  // 로딩 중일 때는 아무것도 안 보여주거나 로딩 스피너를 보여줍니다.
-  if (isLoading) {
-    return <div>로그인 상태 확인 중...</div>;
-  }
 
   return (
     <Router>
