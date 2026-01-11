@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../apis/auth';
+import type { AuthRequest } from '../types/auth';
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ userId: '', password: '' });
+  const [formData, setFormData] = useState<AuthRequest>({
+    userId: '',
+    password: '',
+  });
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
       await authApi.loginLocal(formData);
       alert('로그인 성공!');

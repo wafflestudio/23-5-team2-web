@@ -1,21 +1,22 @@
 import react from '@vitejs/plugin-react-swc';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'https://waffle.tteokgook1.net',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-        // 추가: 서버가 Origin 헤더를 검사할 때 서버 주소와 일치하도록 속임
-        headers: {
-          Origin: 'https://waffle.tteokgook1.net',
-          Referer: 'https://waffle.tteokgook1.net',
+export default defineConfig(({ mode }) => {
+  // 현재 실행 모드(dev 또는 prod)에 맞는 환경 변수를 불러옵니다.
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    plugins: [react()],
+    server: {
+      proxy: {
+        '/api': {
+          // .env 파일에 정의한 VITE_PROXY_TARGET 주소를 사용합니다.
+          target: env.VITE_PROXY_TARGET,
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/api/, ''),
         },
       },
     },
-  },
+  };
 });

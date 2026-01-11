@@ -1,11 +1,15 @@
-export const API_BASE_URL = '/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+export const ACTUAL_BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 
 export const API_ENDPOINTS = {
   AUTH: {
-    GOOGLE_LOGIN: `/oauth2/authorization/google`,
-    ME: `/auth/me`,
-    REGISTER: `/auth/register/local`,
-    LOGIN: '/auth/login/local',
+    GOOGLE_LOGIN: `${ACTUAL_BACKEND_URL}/oauth2/authorization/google`,
+    ME: `${API_BASE_URL}/users/me`,
+    REGISTER: `${API_BASE_URL}/auth/register/local`,
+    LOGIN: `${API_BASE_URL}/auth/login/local`,
   },
-  POSTS: `/posts`,
-} as const; // 이 값을 읽기 전용(ReadOnly)으로 고정합니다.
+  SYSTEM: {
+    HEALTH: `${API_BASE_URL}/actuator/health`,
+  },
+} as const;
