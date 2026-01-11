@@ -11,17 +11,10 @@ export default defineConfig(({ mode }): UserConfig => {
     server: {
       // 1. https: true 설정을 지워도 mkcert()가 있으면 자동으로 HTTPS로 뜹니다.
       proxy: {
-        // 2. 비즈니스 로직 API 프록시
-        '/api': {
-          target,
-          changeOrigin: true,
-          secure: true,
-        },
-        // 3. 시스템 헬스체크용 프록시 (Actuator)
+        // /api 설정은 이제 안 쓰겠지만 둬도 상관없음
         '/actuator': {
           target,
           changeOrigin: true,
-          secure: true,
         },
       },
     },
