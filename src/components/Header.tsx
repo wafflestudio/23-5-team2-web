@@ -5,7 +5,7 @@ import { API_ENDPOINTS } from '../constants/api';
 const Header = () => {
   // console.log('VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
   // console.log('전체 환경변수:', import.meta.env);
-  
+
   // const { user, clearUser } = useUserStore(); // TODO: 유저 상태 관리 로직 추가
 
   const handleGoogleLogin = () => {

@@ -1,5 +1,5 @@
 // 1. 서버 도메인 (기본)
-export const BACKEND_URL = 'https://waffle.tteokgook1.net';
+const BACKEND_URL = 'https://waffle.tteokgook1.net';
 
 // 2. 비즈니스 로직 API용 베이스 (버전 포함)
 export const API_BASE_URL = `${BACKEND_URL}/api/v1`;
