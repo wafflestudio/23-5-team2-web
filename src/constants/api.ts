@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
     GOOGLE_LOGIN: `${BACKEND_URL}/oauth2/authorization/google`,
     REGISTER: `${API_BASE_URL}/auth/register/local`,
     LOGIN: `${API_BASE_URL}/auth/login/local`,
+    LOGOUT: `${API_BASE_URL}/auth/logout`,
     ME: `${API_BASE_URL}/users/me`,
   },
   SYSTEM: {
