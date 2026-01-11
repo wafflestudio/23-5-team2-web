@@ -1,3 +1,4 @@
+// apis/auth.ts
 import { API_ENDPOINTS } from '../constants/api';
 import type { AuthRequest, User } from '../types/auth';
 import { api } from './instance';

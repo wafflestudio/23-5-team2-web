@@ -1,3 +1,4 @@
+// constants/api.ts
 // 1. 서버 도메인 (기본)
 const BACKEND_URL = 'https://waffle.tteokgook1.net';
 

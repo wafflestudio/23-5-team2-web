@@ -1,3 +1,4 @@
+// components/Header.tsx
 import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../apis/auth';
 import { useUserStore } from '../store/useUserStore';

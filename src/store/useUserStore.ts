@@ -1,3 +1,4 @@
+// store/useUserStore.ts
 import { create } from 'zustand';
 import { authApi } from '../apis/auth';
 import type { User } from '../types/auth';

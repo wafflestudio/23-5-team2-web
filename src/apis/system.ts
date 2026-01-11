@@ -1,4 +1,4 @@
-// apis/systems.ts
+// apis/system.ts
 import axios from 'axios';
 import { API_ENDPOINTS } from '../constants/api';
 

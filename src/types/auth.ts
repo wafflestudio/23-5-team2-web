@@ -1,3 +1,4 @@
+// types/auth.ts
 export interface User {
   id: number;
   localId: string;

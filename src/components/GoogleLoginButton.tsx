@@ -1,3 +1,4 @@
+// components/GoogleLoginButton.tsx
 import { API_ENDPOINTS } from '../constants/api';
 
 interface Props {
