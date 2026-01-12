@@ -32,6 +32,7 @@ const MyPage = () => {
       setIsEditingId(false);
       alert('아이디가 변경되었습니다.');
     } catch (error) {
+      console.error(error);
       alert('ID 변경에 실패했습니다.');
     }
   };
@@ -51,6 +52,7 @@ const MyPage = () => {
       setCurrentPw('');
       setNewPw('');
     } catch (error) {
+      console.error(error);
       alert('현재 비밀번호가 틀렸거나 오류가 발생했습니다.');
     }
   };
@@ -67,6 +69,7 @@ const MyPage = () => {
         alert('회원 탈퇴가 완료되었습니다.');
         navigate('/');
       } catch (error) {
+        console.error(error);
         alert('탈퇴 처리 중 오류가 발생했습니다.');
       }
     }
