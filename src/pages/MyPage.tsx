@@ -1,41 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../apis/auth';
 import { useUserStore } from '../store/useUserStore';
 
 const MyPage = () => {
   const navigate = useNavigate();
-  const { user, fetchUser, clearUser } = useUserStore();
+  const { user, clearUser } = useUserStore();
 
-  const [isEditingId, setIsEditingId] = useState(false);
-  const [tempId, setTempId] = useState('');
   const [isEditingPw, setIsEditingPw] = useState(false);
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
-
-  useEffect(() => {
-    if (user?.localId) {
-      setTempId(String(user.localId));
-    } else if (user?.oauthId) {
-      setTempId(String(user.oauthId));
-    }
-  }, [user]);
-
-  const handleIdSave = async () => {
-    if (tempId.length < 4) {
-      alert('아이디는 4자 이상이어야 합니다.');
-      return;
-    }
-    try {
-      await authApi.updateUserId({ userId: tempId });
-      await fetchUser();
-      setIsEditingId(false);
-      alert('아이디가 변경되었습니다.');
-    } catch (error) {
-      console.error(error);
-      alert('ID 변경에 실패했습니다.');
-    }
-  };
 
   const handlePwSave = async () => {
     if (newPw.length < 8) {
@@ -63,9 +37,8 @@ const MyPage = () => {
     );
     if (confirmDelete) {
       try {
-        // authApi에 deleteAccount가 있다고 가정하거나 직접 경로 입력
         await authApi.deleteAccount();
-        clearUser(); // Zustand 상태 초기화
+        clearUser();
         alert('회원 탈퇴가 완료되었습니다.');
         navigate('/');
       } catch (error) {
@@ -79,36 +52,17 @@ const MyPage = () => {
     <div style={S.container}>
       <h2 style={S.title}>마이페이지</h2>
 
-      {/* User ID Section */}
-      <div style={S.row}>
-        {isEditingId ? (
-          <>
-            <input
-              style={S.input}
-              value={tempId}
-              onChange={(e) => setTempId(e.target.value)}
-              autoFocus
-            />
-            <button style={S.saveButton} onClick={handleIdSave}>
-              저장
-            </button>
-          </>
-        ) : (
-          <>
-            <span style={S.usernameText}>
-              {user?.localId || user?.oauthId || '사용자'}
-            </span>
-            <button style={S.button} onClick={() => setIsEditingId(true)}>
-              변경
-            </button>
-          </>
-        )}
+      {/* User ID Section - Centered with no bottom line */}
+      <div style={S.rowCenterNoLine}>
+        <span style={S.usernameText}>
+          {user?.localId || user?.oauthId || '사용자'}
+        </span>
       </div>
 
       {/* Password Section */}
       <div style={{ width: '100%', maxWidth: '350px' }}>
-        <div style={S.row}>
-          <span style={S.usernameText}>비밀번호</span>
+        <div style={S.rowSpaceBetween}>
+          <span style={S.sectionLabel}>비밀번호</span>
           {!isEditingPw && (
             <button style={S.button} onClick={() => setIsEditingPw(true)}>
               변경
@@ -143,7 +97,6 @@ const MyPage = () => {
         )}
       </div>
 
-      {/* Navigation and Delete Section */}
       <div style={S.footerSection}>
         <button style={S.backLink} onClick={() => navigate('/')}>
           홈으로 돌아가기
@@ -171,7 +124,17 @@ const S = {
     fontSize: '32px',
     fontWeight: 'normal',
   } as React.CSSProperties,
-  row: {
+  // Removed borderBottom and paddingBottom
+  rowCenterNoLine: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: '350px',
+    margin: '10px 0 25px 0', // Adjusted margin for spacing
+    minHeight: '45px',
+  } as React.CSSProperties,
+  rowSpaceBetween: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -183,10 +146,14 @@ const S = {
     paddingBottom: '10px',
   } as React.CSSProperties,
   usernameText: {
-    fontSize: '20px',
+    fontSize: '20px', // Smaller than before (was 24px)
     color: '#333',
-    flex: 1,
-    textAlign: 'left' as const,
+    fontWeight: 'bold',
+    textAlign: 'center' as const,
+  } as React.CSSProperties,
+  sectionLabel: {
+    fontSize: '18px',
+    color: '#333',
   } as React.CSSProperties,
   input: {
     padding: '10px',
@@ -203,7 +170,6 @@ const S = {
     borderRadius: '4px',
     cursor: 'pointer',
     fontSize: '14px',
-    marginLeft: '20px',
   } as React.CSSProperties,
   saveButton: {
     padding: '8px 16px',
@@ -238,7 +204,7 @@ const S = {
   deleteButton: {
     background: 'none',
     border: 'none',
-    color: '#ff4d4f', // Standard "Danger" Red
+    color: '#ff4d4f',
     cursor: 'pointer',
     fontSize: '13px',
     opacity: 0.8,
