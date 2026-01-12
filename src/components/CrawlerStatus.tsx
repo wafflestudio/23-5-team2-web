@@ -1,9 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { getCrawlerStatus } from '../apis/crawlerApi';
-import type { CrawlerStatusItem } from '../types/crawler';
+import type {
+  CrawlerStatusItem,
+  CrawlerStatusResponse,
+} from '../types/crawler';
 
 export const CrawlerStatus = () => {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery<CrawlerStatusResponse>({
     queryKey: ['crawlerStatus'],
     queryFn: getCrawlerStatus,
     refetchInterval: 60000, // 1분마다 업데이트
@@ -14,7 +17,7 @@ export const CrawlerStatus = () => {
     const now = new Date();
     const updated = new Date(dateStr);
     const diffMs = now.getTime() - updated.getTime();
-    
+
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMinutes / 60);
 

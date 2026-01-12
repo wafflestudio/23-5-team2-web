@@ -16,7 +16,7 @@ export const API_ENDPOINTS = {
   },
   CRAWLER: {
     GET_STATUS: `${API_BASE_URL}/crawlers`,
-  }
+  },
 } as const;
 
 // 2. 헬스 체크만 '프록시'를 타도록 상대 경로로 둡니다. (CORS 해결용)
