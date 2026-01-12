@@ -1,7 +1,7 @@
 // pages/LoginPage.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../apis/auth';
+import { authApi } from '../apis/authApi';
 import GoogleLoginButton from '../components/GoogleLoginButton';
 import { useUserStore } from '../store/useUserStore';
 import type { AuthRequest } from '../types/auth';

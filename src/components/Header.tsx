@@ -1,6 +1,6 @@
 // components/Header.tsx
 import { Link, useNavigate } from 'react-router-dom';
-import { authApi } from '../apis/auth';
+import { authApi } from '../apis/authApi';
 import { useUserStore } from '../store/useUserStore';
 
 const Header = () => {

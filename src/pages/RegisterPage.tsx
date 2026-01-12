@@ -1,7 +1,7 @@
 // pages/RegisterPage.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../apis/auth';
+import { authApi } from '../apis/authApi';
 // 1. 구글 버튼 컴포넌트 임포트
 import GoogleLoginButton from '../components/GoogleLoginButton';
 import type { AuthRequest } from '../types/auth';

@@ -10,8 +10,13 @@ export const API_ENDPOINTS = {
     REGISTER: `${API_BASE_URL}/v1/auth/register/local`,
     LOGIN: `${API_BASE_URL}/v1/auth/login/local`,
     LOGOUT: `${API_BASE_URL}/v1/auth/logout`,
+  },
+  USER: {
     ME: `${API_BASE_URL}/v1/users/me`,
   },
+  CRAWLER: {
+    GET_STATUS: `${API_BASE_URL}/crawlers`,
+  }
 } as const;
 
 // 2. 헬스 체크만 '프록시'를 타도록 상대 경로로 둡니다. (CORS 해결용)

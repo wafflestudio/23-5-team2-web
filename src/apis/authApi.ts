@@ -20,5 +20,5 @@ export const authApi = {
   // 내 정보 확인
   // instance.ts에 withCredentials: true 설정이 되어있다면,
   // 브라우저가 자동으로 쿠키를 헤더에 실어 보냅니다.
-  getMe: () => api.get<User>(API_ENDPOINTS.AUTH.ME),
+  getMe: () => api.get<User>(API_ENDPOINTS.USER.ME),
 };

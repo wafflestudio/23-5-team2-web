@@ -1,23 +1,26 @@
-// components/Footer.tsx
-import { Link, useLocation } from 'react-router-dom'; // useLocation 추가
+import { Link, useLocation } from 'react-router-dom';
+import { CrawlerStatus } from './CrawlerStatus'; // 새로 만든 컴포넌트 임포트
 
 const Footer = () => {
-  const location = useLocation(); // 현재 위치 정보를 가져옵니다.
+  const location = useLocation();
 
   return (
     <footer style={S.footer}>
-      <div style={S.text}>마지막 업데이트: 0일 0시간 전</div>
+      {/* 왼쪽: 크롤러 상태 및 업데이트 정보 */}
+      <CrawlerStatus />
 
-      {/* 현재 주소가 /health이면 '돌아가기', 아니면 'health' 링크 표시 */}
-      {location.pathname === '/health' ? (
-        <Link to="/" style={S.link}>
-          돌아가기
-        </Link>
-      ) : (
-        <Link to="/health" style={S.link}>
-          health
-        </Link>
-      )}
+      {/* 오른쪽: 페이지 이동 링크 */}
+      <div style={S.rightSection}>
+        {location.pathname === '/health' ? (
+          <Link to="/" style={S.link}>
+            돌아가기
+          </Link>
+        ) : (
+          <Link to="/health" style={S.link}>
+            health
+          </Link>
+        )}
+      </div>
     </footer>
   );
 };
@@ -35,10 +38,9 @@ const S = {
     backgroundColor: '#f8f9fa',
     marginTop: 'auto',
   },
-  text: {
-    fontSize: '0.85rem',
-    color: '#888',
-    whiteSpace: 'nowrap' as const,
+  rightSection: {
+    display: 'flex',
+    alignItems: 'center',
   },
   link: {
     fontSize: '0.85rem',
