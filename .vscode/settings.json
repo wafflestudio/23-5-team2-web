@@ -1,11 +1,12 @@
 {
-  "editor.defaultFormatter": "biomejs.biome",
   "prettier.enable": false,
   "eslint.enable": false,
+  "editor.defaultFormatter": "biomejs.biome",
   "biome.enabled": true,
+  "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "quickfix.biome": "explicit",
-    "source.fixAll.biome": "explicit",
-    "source.organizeImports.biome": "explicit"
+    "quickfix.biome": "always",
+    "source.fixAll.biome": "always",
+    "source.organizeImports.biome": "always"
   }
 }
