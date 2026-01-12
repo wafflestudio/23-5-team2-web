@@ -8,9 +8,13 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await authApi.logout();
-    clearUser();
-    navigate('/');
+    try {
+      await authApi.logout();
+      clearUser();
+      navigate('/');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+    }
   };
 
   return (
@@ -27,9 +31,12 @@ const Header = () => {
         ) : user ? (
           <>
             <span style={S.statusText}>
-              {/* localId가 있으면 출력, 없으면 oauthId 출력, 그것도 없으면 "사용자" 출력 */}
-              <strong>{user.localId || user.oauthId || '사용자'}</strong>
+              <strong>{user.localId || user.oauthId || '사용자'}</strong>님
             </span>
+            {/* 마이페이지 버튼 추가 */}
+            <Link to="/mypage" style={S.textLink}>
+              마이페이지
+            </Link>
             <button onClick={handleLogout} style={S.textLink}>
               로그아웃
             </button>
@@ -49,7 +56,7 @@ const Header = () => {
   );
 };
 
-// 2. 스타일 정의 (JSX를 깨끗하게 유지)
+// 스타일 정의는 그대로 유지됩니다.
 const S = {
   header: {
     display: 'flex',
