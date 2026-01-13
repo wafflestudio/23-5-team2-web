@@ -9,7 +9,7 @@ export const CrawlerStatus = () => {
   const { data, isLoading, isError } = useQuery<CrawlerStatusResponse>({
     queryKey: ['crawlerStatus'],
     queryFn: getCrawlerStatus,
-    refetchInterval: 60000, // 1분마다 업데이트
+    // refetchInterval: 60000, // 1분마다 업데이트
   });
 
   // 시간 차이 계산 함수
