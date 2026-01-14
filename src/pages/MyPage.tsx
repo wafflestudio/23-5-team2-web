@@ -22,7 +22,7 @@ const MyPage = () => {
       return;
     }
     try {
-      // Using verified keys: oldPassword and newPassword
+      // Using verified keys: currentPassword and newPassword
       await authApi.updatePassword({
         currentPassword: currentPw,
         newPassword: newPw,
@@ -128,14 +128,6 @@ const MyPage = () => {
 
       {/* Footer Navigation & Danger Zone */}
       <div className={styles.footerSection}>
-        <button
-          type="button"
-          className={styles.backLink}
-          onClick={() => navigate('/')}
-        >
-          홈으로 돌아가기
-        </button>
-
         <button
           type="button"
           className={styles.deleteButton}
