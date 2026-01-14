@@ -1,6 +1,7 @@
 // pages/HealthCheckPage.tsx
 import { useCallback, useEffect, useState } from 'react';
 import { systemApi } from '../apis/system'; // 파일명 오타 주의 (system vs systems)
+import styles from './HealthCheckPage.module.css';
 
 const HealthCheckPage = () => {
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
@@ -33,45 +34,33 @@ const HealthCheckPage = () => {
   }, [getHealth]);
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <div className={styles.container}>
       <h1>시스템 모니터링</h1>
       <hr />
 
-      <div
-        style={{
-          margin: '1rem 0',
-          padding: '1rem',
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-        }}
-      >
+      <div className={styles.statusCard}>
         {status === 'loading' && <p>⏳ 서버 상태 확인 중...</p>}
 
         {status === 'ok' && (
           <div>
-            <p style={{ color: 'green', fontWeight: 'bold' }}>
-              ● 서버 정상 작동 중
-            </p>
+            <p className={styles.statusTitleOk}>● 서버 정상 작동 중</p>
             <small>상태 코드: {healthData?.status}</small>
           </div>
         )}
 
         {status === 'error' && (
           <div>
-            <p style={{ color: 'red', fontWeight: 'bold' }}>
+            <p className={styles.statusTitleError}>
               ● 서버 연결 불가 또는 지연
             </p>
-            <p style={{ fontSize: '0.9rem' }}>
+            <p className={styles.errorText}>
               현재 API 서버에 접근할 수 없습니다.
             </p>
           </div>
         )}
       </div>
 
-      <button
-        onClick={getHealth}
-        style={{ padding: '8px 16px', cursor: 'pointer' }}
-      >
+      <button onClick={getHealth} className={styles.refreshButton}>
         새로고침
       </button>
     </div>

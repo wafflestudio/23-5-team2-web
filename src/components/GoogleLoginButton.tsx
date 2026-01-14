@@ -2,10 +2,14 @@
 import { API_ENDPOINTS } from '../constants/api';
 
 interface Props {
-  text?: string; // string 타입이며, 필수값이 아님(? 표시)
+  text?: string;
+  className?: string;
 }
 
-const GoogleLoginButton = ({ text = '구글 로그인 / 회원가입' }: Props) => {
+const GoogleLoginButton = ({
+  text = '구글 로그인 / 회원가입',
+  className,
+}: Props) => {
   const handleGoogleLogin = () => {
     // 1. 로그인이 끝나고 돌아올 프론트엔드 주소 (보통 메인 페이지)
     const frontendRedirectUri = window.location.origin;
@@ -21,7 +25,11 @@ const GoogleLoginButton = ({ text = '구글 로그인 / 회원가입' }: Props) 
     window.location.href = googleLoginUrl;
   };
 
-  return <button onClick={handleGoogleLogin}>{text}</button>;
+  return (
+    <button onClick={handleGoogleLogin} className={className}>
+      {text}
+    </button>
+  );
 };
 
 export default GoogleLoginButton;

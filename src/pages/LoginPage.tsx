@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../apis/authApi';
 import GoogleLoginButton from '../components/GoogleLoginButton';
+import styles from '../components/auth/AuthForm.module.css';
+import AuthLayout from '../components/auth/AuthLayout';
 import { useUserStore } from '../store/useUserStore';
 import type { AuthRequest } from '../types/auth';
 
@@ -27,30 +29,13 @@ const LoginPage = () => {
   };
 
   return (
-    <div
-      style={{
-        padding: '2rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
-      <h2>로그인</h2>
-
+    <AuthLayout title="로그인">
       {/* 1. 로컬 로그인 폼 */}
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          width: '100%',
-          maxWidth: '300px',
-        }}
-      >
+      <form onSubmit={handleSubmit} className={styles.form}>
         <input
           placeholder="아이디"
           onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+          className={styles.input}
           required
         />
         <input
@@ -59,41 +44,27 @@ const LoginPage = () => {
           onChange={(e) =>
             setFormData({ ...formData, password: e.target.value })
           }
+          className={styles.input}
           required
         />
-        <button type="submit" style={{ padding: '10px', cursor: 'pointer' }}>
+        <button type="submit" className={styles.submitButton}>
           로그인
         </button>
       </form>
 
       {/* 구분선 */}
-      <div
-        style={{
-          margin: '1.5rem 0',
-          width: '100%',
-          maxWidth: '300px',
-          textAlign: 'center',
-          borderBottom: '1px solid #ccc',
-          lineHeight: '0.1em',
-        }}
-      >
-        <span
-          style={{
-            background: '#fff',
-            padding: '0 10px',
-            color: '#888',
-            fontSize: '14px',
-          }}
-        >
-          또는
-        </span>
+      <div className={styles.divider}>
+        <span className={styles.dividerText}>또는</span>
       </div>
 
-      {/* 2. 소셜 로그인 영역 (폼 외부) */}
-      <div style={{ width: '100%', maxWidth: '300px' }}>
-        <GoogleLoginButton text="구글로 로그인" />
+      {/* 2. 소셜 로그인 영역 */}
+      <div className={styles.socialLoginWrapper}>
+        <GoogleLoginButton
+          text="Google 계정으로 로그인"
+          className={styles.googleButton}
+        />
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 
