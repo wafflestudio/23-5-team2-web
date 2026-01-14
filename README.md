@@ -1,6 +1,7 @@
 # 23-5-team2-web
 와플스튜디오 23.5기 2조 Web
 
+[배포](https://d3qoguyzgqods9.cloudfront.net)
 [SWAGGER UI](https://waffle.tteokgook1.net/swagger-ui/index.html#/)
 
 # 주의사항
