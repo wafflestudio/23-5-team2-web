@@ -7,6 +7,7 @@ import Header from './components/Header';
 import HealthCheckPage from './pages/HealthCheckPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
+import MyPage from './pages/MyPage';
 import RegisterPage from './pages/RegisterPage';
 import { useUserStore } from './store/useUserStore';
 
@@ -28,6 +29,7 @@ const App = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/health" element={<HealthCheckPage />} />
+          <Route path="/mypage" element={<MyPage />} />
         </Routes>
       </main>
       <Footer />

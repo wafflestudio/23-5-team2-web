@@ -9,9 +9,13 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await authApi.logout();
-    clearUser();
-    navigate('/');
+    try {
+      await authApi.logout();
+      clearUser();
+      navigate('/');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+    }
   };
 
   return (
@@ -27,11 +31,14 @@ const Header = () => {
           <span className={styles.statusText}>확인 중...</span>
         ) : user ? (
           <>
-            <span className={styles.statusText}>
-              {/* localId가 있으면 출력, 없으면 oauthId 출력, 그것도 없으면 "사용자" 출력 */}
+            <span style={S.statusText}>
               <strong>{user.localId || user.oauthId || '사용자'}</strong>
             </span>
-            <button onClick={handleLogout} className={styles.textLink}>
+            {/* 마이페이지 버튼 추가 */}
+            <Link to="/mypage" style={S.textLink}>
+              마이페이지
+            </Link>
+            <button onClick={handleLogout} style={S.textLink}>
               로그아웃
             </button>
           </>
@@ -48,6 +55,51 @@ const Header = () => {
       </nav>
     </header>
   );
+};
+
+// 스타일 정의는 그대로 유지됩니다.
+const S = {
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '1rem 5%',
+    backgroundColor: '#fff',
+    borderBottom: '1px solid #ddd',
+    width: '100%',
+    boxSizing: 'border-box' as const,
+  },
+  logo: {
+    fontSize: '1.25rem',
+    fontWeight: 'bold',
+    textDecoration: 'none',
+    color: '#000',
+    flexShrink: 0,
+  },
+  nav: {
+    display: 'flex',
+    gap: '15px',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  statusText: {
+    fontSize: '14px',
+    color: '#555',
+    whiteSpace: 'nowrap' as const,
+  },
+  textLink: {
+    // 버튼 기본 스타일 초기화
+    background: 'none',
+    border: 'none',
+    padding: 0,
+    cursor: 'pointer',
+    // 텍스트 스타일 (Link와 통일)
+    fontSize: '16px',
+    color: '#333',
+    textDecoration: 'none',
+    fontFamily: 'inherit',
+    whiteSpace: 'nowrap' as const,
+  },
 };
 
 export default Header;
