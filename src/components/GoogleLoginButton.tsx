@@ -1,5 +1,5 @@
 // components/GoogleLoginButton.tsx
-import { API_ENDPOINTS } from '../constants/api';
+import { BACKEND_URL } from '../constants/api';
 
 interface Props {
   text?: string;
@@ -19,7 +19,7 @@ const GoogleLoginButton = ({
 
     // 3. 최종 URL 생성: 백엔드가 요구하는 쿼리 키(예: redirect_uri)를 확인하세요.
     // 백엔드 개발자에게 키 이름이 'redirect_uri'인지 'state'인지 확인이 필요합니다.
-    const googleLoginUrl = `${API_ENDPOINTS.AUTH.GOOGLE_LOGIN}?redirect_uri=${encodedUri}`;
+    const googleLoginUrl = `${BACKEND_URL}/oauth2/authorization/google?redirect_uri=${encodedUri}`;
 
     // 4. 페이지 이동
     window.location.href = googleLoginUrl;

@@ -30,7 +30,7 @@ export const CrawlerStatus = () => {
 
   return (
     <div style={S.container}>
-      {data.results.map((crawler: CrawlerStatusItem) => (
+      {data?.results?.map((crawler: CrawlerStatusItem) => (
         <div key={crawler.id} style={S.crawlerItem}>
           <span style={S.dot} />
           <span style={S.boardName}>{crawler.boardName}</span>
