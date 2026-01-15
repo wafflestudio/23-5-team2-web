@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../apis/auth';
+import { authApi } from '../apis/authApi'; // Note: check import path, original was '../apis/auth' but LoginPage uses '../apis/authApi'. I saw LoginPage.tsx using authApi.
+import authStyles from '../components/auth/AuthForm.module.css';
+import AuthLayout from '../components/auth/AuthLayout';
+import PasswordInput from '../components/auth/PasswordInput';
 import { useUserStore } from '../store/useUserStore';
 import styles from './MyPage.module.css';
 
@@ -12,17 +15,26 @@ const MyPage = () => {
   const [isEditingPw, setIsEditingPw] = useState(false);
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
+  // removed local showPassword state
 
-  // Google users typically don't have a localId in the DB
+  // Google users typically don't have a localId in the DB (or handled differently)
+  // Assuming logic from original file: check if localId exists
   const isLocalUser = !!user?.localId;
 
-  const handlePwSave = async () => {
+  const handlePwSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
     if (newPw.length < 8) {
       alert('새 비밀번호는 8자 이상이어야 합니다.');
       return;
     }
+
+    if (currentPw === newPw && newPw !== '') {
+      console.error('현재 비밀번호와 새 비밀번호가 동일합니다.');
+      return;
+    }
+
     try {
-      // Using verified keys: currentPassword and newPassword
       await authApi.updatePassword({
         currentPassword: currentPw,
         newPassword: newPw,
@@ -60,83 +72,83 @@ const MyPage = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <h2 className={styles.title}>마이페이지</h2>
-
-      {/* User Identity Section */}
-      <div className={styles.rowCenterNoLine}>
-        <span className={styles.usernameText}>
+    <AuthLayout title="마이페이지">
+      {/* User Info */}
+      <div className={styles.infoRow}>
+        <span className={styles.label}>아이디</span>
+        <span className={styles.value}>
           {user?.localId || user?.oauthId || '사용자'}
         </span>
       </div>
 
-      {/* Conditional Password Section */}
-      <div style={{ width: '100%', maxWidth: '350px' }}>
+      {/* Password Section */}
+      <div className={styles.section}>
         {isLocalUser ? (
           <>
-            <div className={styles.rowSpaceBetween}>
-              <span className={styles.sectionLabel}>비밀번호</span>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionTitle}>비밀번호</span>
               {!isEditingPw && (
                 <button
                   type="button"
-                  className={styles.button}
+                  className={styles.toggleButton}
                   onClick={() => setIsEditingPw(true)}
                 >
-                  변경
+                  변경하기
                 </button>
               )}
             </div>
 
             {isEditingPw && (
-              <div className={styles.pwGroup}>
-                <div style={{ display: 'flex' }}>
-                  <input
-                    type="password"
-                    placeholder="현재 비밀번호"
-                    className={styles.input}
-                    value={currentPw}
-                    onChange={(e) => setCurrentPw(e.target.value)}
-                  />
-                </div>
-                <div style={{ display: 'flex', marginTop: '10px' }}>
-                  <input
-                    type="password"
-                    placeholder="새 비밀번호"
-                    className={styles.input}
-                    value={newPw}
-                    onChange={(e) => setNewPw(e.target.value)}
-                  />
+              <form className={styles.formGroup} onSubmit={handlePwSave}>
+                <PasswordInput
+                  placeholder="현재 비밀번호"
+                  value={currentPw}
+                  onChange={(e) => setCurrentPw(e.target.value)}
+                  className={authStyles.input}
+                />
+
+                <PasswordInput
+                  placeholder="새 비밀번호 (8자 이상)"
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                  className={authStyles.input}
+                />
+
+                <div style={{ display: 'flex', gap: '10px' }}>
                   <button
                     type="button"
-                    className={styles.saveButton}
-                    onClick={handlePwSave}
+                    className={styles.cancelButton}
+                    onClick={() => {
+                      setIsEditingPw(false);
+                      setCurrentPw('');
+                      setNewPw('');
+                    }}
                   >
-                    저장
+                    취소
+                  </button>
+                  <button type="submit" className={styles.saveButton}>
+                    확인
                   </button>
                 </div>
-              </div>
+              </form>
             )}
           </>
         ) : (
-          <div className={styles.rowCenterNoLine}>
-            <p className={styles.socialNotice}>
-              소셜 로그인 사용자는 해당 서비스에서 비밀번호를 관리합니다.
-            </p>
-          </div>
+          <p className={styles.notice}>
+            소셜 로그인 사용자는 해당 서비스에서 비밀번호를 관리합니다.
+          </p>
         )}
       </div>
 
-      {/* Footer Navigation & Danger Zone */}
-      <div className={styles.footerSection}>
-        <button
-          type="button"
-          className={styles.deleteButton}
-          onClick={handleDeleteAccount}
-        >
-          회원 탈퇴
-        </button>
-      </div>
-    </div>
+      {/* Delete Account */}
+      <button
+        type="button"
+        className={styles.deleteButton}
+        onClick={handleDeleteAccount}
+      >
+        회원 탈퇴
+      </button>
+    </AuthLayout>
   );
 };
 

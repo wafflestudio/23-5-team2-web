@@ -4,6 +4,7 @@ import type {
   CrawlerStatusItem,
   CrawlerStatusResponse,
 } from '../types/crawler';
+import styles from './CrawlerStatus.module.css';
 
 export const CrawlerStatus = () => {
   const { data, isLoading, isError } = useQuery<CrawlerStatusResponse>({
@@ -25,59 +26,22 @@ export const CrawlerStatus = () => {
     return `${diffMinutes}분 전`;
   };
 
-  if (isLoading) return <div style={S.infoText}>크롤러 정보 로딩 중...</div>;
-  if (isError || !data) return <div style={S.infoText}>상태 조회 실패</div>;
+  if (isLoading)
+    return <div className={styles.infoText}>크롤러 정보 로딩 중...</div>;
+  if (isError || !data)
+    return <div className={styles.infoText}>상태 조회 실패</div>;
 
   return (
-    <div style={S.container}>
+    <div className={styles.container}>
       {data?.results?.map((crawler: CrawlerStatusItem) => (
-        <div key={crawler.id} style={S.crawlerItem}>
-          <span style={S.dot} />
-          <span style={S.boardName}>{crawler.boardName}</span>
-          <span style={S.timeText}>{getTimeDiff(crawler.lastUpdatedAt)}</span>
+        <div key={crawler.id} className={styles.crawlerItem}>
+          <span className={styles.dot} />
+          <span className={styles.boardName}>{crawler.boardName}</span>
+          <span className={styles.timeText}>
+            {getTimeDiff(crawler.lastUpdatedAt)}
+          </span>
         </div>
       ))}
     </div>
   );
 };
-
-const S = {
-  container: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-    overflowX: 'auto', // 크롤러가 많아질 경우 대비해 가로 스크롤 허용
-    paddingRight: '1rem',
-    msOverflowStyle: 'none' as const, // 스크롤바 숨기기 (IE)
-    scrollbarWidth: 'none' as const, // 스크롤바 숨기기 (Firefox)
-  },
-  crawlerItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    whiteSpace: 'nowrap' as const,
-    backgroundColor: '#fff',
-    padding: '2px 8px',
-    borderRadius: '12px',
-    border: '1px solid #eee',
-  },
-  dot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    backgroundColor: '#2ecc71',
-  },
-  boardName: {
-    fontSize: '0.75rem',
-    fontWeight: '600' as const,
-    color: '#444',
-  },
-  timeText: {
-    fontSize: '0.7rem',
-    color: '#999',
-  },
-  infoText: {
-    fontSize: '0.8rem',
-    color: '#888',
-  },
-} as const;

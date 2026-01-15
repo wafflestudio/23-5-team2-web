@@ -5,6 +5,7 @@ import { authApi } from '../apis/authApi';
 import GoogleLoginButton from '../components/GoogleLoginButton';
 import styles from '../components/auth/AuthForm.module.css';
 import AuthLayout from '../components/auth/AuthLayout';
+import PasswordInput from '../components/auth/PasswordInput';
 import type { AuthRequest } from '../types/auth';
 
 interface RegisterForm extends AuthRequest {
@@ -68,8 +69,7 @@ const RegisterPage = () => {
 
         {/* 비밀번호 입력 */}
         <div>
-          <input
-            type="password"
+          <PasswordInput
             placeholder="비밀번호"
             value={formData.password}
             onChange={(e) =>
@@ -87,8 +87,7 @@ const RegisterPage = () => {
 
         {/* 비밀번호 확인 입력 */}
         <div>
-          <input
-            type="password"
+          <PasswordInput
             placeholder="비밀번호 확인"
             value={formData.passwordConfirm}
             onChange={(e) =>

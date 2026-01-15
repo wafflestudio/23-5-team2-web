@@ -5,6 +5,7 @@ import { authApi } from '../apis/authApi';
 import GoogleLoginButton from '../components/GoogleLoginButton';
 import styles from '../components/auth/AuthForm.module.css';
 import AuthLayout from '../components/auth/AuthLayout';
+import PasswordInput from '../components/auth/PasswordInput';
 import { useUserStore } from '../store/useUserStore';
 import type { AuthRequest } from '../types/auth';
 
@@ -38,8 +39,7 @@ const LoginPage = () => {
           className={styles.input}
           required
         />
-        <input
-          type="password"
+        <PasswordInput
           placeholder="비밀번호"
           onChange={(e) =>
             setFormData({ ...formData, password: e.target.value })
