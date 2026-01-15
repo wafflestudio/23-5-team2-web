@@ -19,11 +19,6 @@ export default defineConfig(({ mode }): UserConfig => {
           // 필요하다면 rewrite 설정 (백엔드 주소에 /api가 포함되어 있지 않은 경우)
           // rewrite: (path) => path.replace(/^\/api/, ''),
         },
-        // 2. 헬스체크용 프록시 (이미 잘 설정됨)
-        '/actuator': {
-          target,
-          changeOrigin: true,
-        },
       },
     },
   };
