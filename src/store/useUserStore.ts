@@ -1,6 +1,6 @@
 // store/useUserStore.ts
 import { create } from 'zustand';
-import { authApi } from '../apis/auth';
+import { authApi } from '../apis/authApi';
 import type { User } from '../types/auth';
 
 interface UserState {

@@ -1,9 +1,11 @@
 // pages/RegisterPage.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../apis/auth';
-// 1. 구글 버튼 컴포넌트 임포트
+import { authApi } from '../apis/authApi';
 import GoogleLoginButton from '../components/GoogleLoginButton';
+import styles from '../components/auth/AuthForm.module.css';
+import AuthLayout from '../components/auth/AuthLayout';
+import PasswordInput from '../components/auth/PasswordInput';
 import type { AuthRequest } from '../types/auth';
 
 interface RegisterForm extends AuthRequest {
@@ -45,25 +47,8 @@ const RegisterPage = () => {
   };
 
   return (
-    <div
-      style={{
-        padding: '2rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
-      <h2>회원가입</h2>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px',
-          width: '100%',
-          maxWidth: '300px',
-        }}
-      >
+    <AuthLayout title="회원가입">
+      <form onSubmit={handleSubmit} className={styles.form}>
         {/* 아이디 입력 */}
         <div>
           <input
@@ -72,11 +57,11 @@ const RegisterPage = () => {
             onChange={(e) =>
               setFormData({ ...formData, userId: e.target.value })
             }
-            style={{ width: '100%', padding: '8px' }}
+            className={styles.input}
             required
           />
           {formData.userId && !isUserIdValid && (
-            <p style={{ color: 'red', fontSize: '12px', margin: '4px 0' }}>
+            <p className={styles.errorMessage}>
               아이디는 4자 이상이어야 합니다.
             </p>
           )}
@@ -84,18 +69,17 @@ const RegisterPage = () => {
 
         {/* 비밀번호 입력 */}
         <div>
-          <input
-            type="password"
+          <PasswordInput
             placeholder="비밀번호"
             value={formData.password}
             onChange={(e) =>
               setFormData({ ...formData, password: e.target.value })
             }
-            style={{ width: '100%', padding: '8px' }}
+            className={styles.input}
             required
           />
           {formData.password && !isPasswordValid && (
-            <p style={{ color: 'red', fontSize: '12px', margin: '4px 0' }}>
+            <p className={styles.errorMessage}>
               비밀번호는 8자 이상이어야 합니다.
             </p>
           )}
@@ -103,23 +87,20 @@ const RegisterPage = () => {
 
         {/* 비밀번호 확인 입력 */}
         <div>
-          <input
-            type="password"
+          <PasswordInput
             placeholder="비밀번호 확인"
             value={formData.passwordConfirm}
             onChange={(e) =>
               setFormData({ ...formData, passwordConfirm: e.target.value })
             }
-            style={{ width: '100%', padding: '8px' }}
+            className={styles.input}
             required
           />
           {formData.passwordConfirm && (
             <p
-              style={{
-                color: isPasswordMatch ? 'green' : 'red',
-                fontSize: '12px',
-                margin: '4px 0',
-              }}
+              className={
+                isPasswordMatch ? styles.successMessage : styles.errorMessage
+              }
             >
               {isPasswordMatch
                 ? '비밀번호가 일치합니다.'
@@ -131,46 +112,25 @@ const RegisterPage = () => {
         <button
           type="submit"
           disabled={!isFormValid}
-          style={{
-            padding: '10px',
-            backgroundColor: isFormValid ? '#4CAF50' : '#ccc',
-            color: 'white',
-            border: 'none',
-            cursor: isFormValid ? 'pointer' : 'not-allowed',
-          }}
+          className={styles.submitButton}
         >
           회원가입
         </button>
       </form>
 
       {/* 구분선 추가 */}
-      <div
-        style={{
-          margin: '1.5rem 0',
-          width: '100%',
-          maxWidth: '300px',
-          textAlign: 'center',
-          borderBottom: '1px solid #ccc',
-          lineHeight: '0.1em',
-        }}
-      >
-        <span
-          style={{
-            background: '#fff',
-            padding: '0 10px',
-            color: '#888',
-            fontSize: '14px',
-          }}
-        >
-          또는
-        </span>
+      <div className={styles.divider}>
+        <span className={styles.dividerText}>또는</span>
       </div>
 
       {/* 구글 로그인/회원가입 버튼 추가 */}
-      <div style={{ width: '100%', maxWidth: '300px' }}>
-        <GoogleLoginButton text="구글로 시작하기" />
+      <div className={styles.socialLoginWrapper}>
+        <GoogleLoginButton
+          text="Google 계정으로 회원가입"
+          className={styles.googleButton}
+        />
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

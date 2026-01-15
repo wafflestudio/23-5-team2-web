@@ -1,7 +1,8 @@
 // components/Header.tsx
 import { Link, useNavigate } from 'react-router-dom';
-import { authApi } from '../apis/auth';
+import { authApi } from '../apis/authApi';
 import { useUserStore } from '../store/useUserStore';
+import styles from './Header.module.css';
 
 const Header = () => {
   const { user, clearUser, isLoading } = useUserStore();
@@ -18,20 +19,20 @@ const Header = () => {
   };
 
   return (
-    <header style={S.header}>
+    <header className={styles.header}>
       {/* 왼쪽: 서비스 이름 */}
-      <Link to="/" style={S.logo}>
+      <Link to="/" className={styles.logo}>
         스누보드
       </Link>
 
       {/* 오른쪽: 내비게이션 영역 */}
-      <nav style={S.nav}>
+      <nav className={styles.nav}>
         {isLoading ? (
-          <span style={S.statusText}>확인 중...</span>
+          <span className={styles.statusText}>확인 중...</span>
         ) : user ? (
           <>
             <span style={S.statusText}>
-              <strong>{user.localId || user.oauthId || '사용자'}</strong>님
+              <strong>{user.localId || user.oauthId || '사용자'}</strong>
             </span>
             {/* 마이페이지 버튼 추가 */}
             <Link to="/mypage" style={S.textLink}>
@@ -43,10 +44,10 @@ const Header = () => {
           </>
         ) : (
           <>
-            <Link to="/login" style={S.textLink}>
+            <Link to="/login" className={styles.textLink}>
               로그인
             </Link>
-            <Link to="/register" style={S.textLink}>
+            <Link to="/register" className={styles.textLink}>
               회원가입
             </Link>
           </>

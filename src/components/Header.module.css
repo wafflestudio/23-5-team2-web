@@ -1,0 +1,43 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 5%;
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.logo {
+  font-size: 1.25rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.nav {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.statusText {
+  font-size: 14px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.textLink {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 16px;
+  color: #333;
+  text-decoration: none;
+  font-family: inherit;
+  white-space: nowrap;
+}

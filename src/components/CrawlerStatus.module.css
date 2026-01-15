@@ -1,0 +1,47 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-right: 1rem;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.container::-webkit-scrollbar {
+  display: none;
+}
+
+.crawlerItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  background-color: #fff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #2ecc71;
+}
+
+.boardName {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.timeText {
+  font-size: 0.7rem;
+  color: #999;
+}
+
+.infoText {
+  font-size: 0.8rem;
+  color: #888;
+}

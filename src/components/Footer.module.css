@@ -1,0 +1,25 @@
+.footer {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  height: 60px;
+  border-top: 1px solid #eaeaea;
+  background-color: #f8f9fa;
+  margin-top: auto;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+}
+
+.link {
+  font-size: 0.85rem;
+  color: #aaa;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}

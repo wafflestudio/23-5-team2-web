@@ -10,9 +10,13 @@
     "check:types": "tsc",
     "check:format": "biome check .",
     "check:unused": "knip",
-    "check-all": "yarn check:types && yarn check:format && yarn check:unused"
+    "check-all": "yarn check:types && yarn check:format && yarn check:unused",
+    "fix": "biome check --write --unsafe .",
+    "fix-all": "yarn fix && yarn check-all",
+    "ready": "yarn fix-all && yarn build"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.16",
     "axios": "^1.13.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
