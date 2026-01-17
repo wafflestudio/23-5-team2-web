@@ -4,6 +4,7 @@ import './style.css';
 import { useEffect } from 'react';
 import Footer from './components/Footer';
 import Header from './components/Header';
+import ArticleDetailPage from './pages/ArticleDetailPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import MyPage from './pages/MyPage';
@@ -25,6 +26,7 @@ const App = () => {
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/article/:articleId" element={<ArticleDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/mypage" element={<MyPage />} />

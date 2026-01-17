@@ -1,0 +1,128 @@
+.container {
+  width: 100%;
+  max-width: 1200px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.searchContainer {
+  margin-bottom: 2rem;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: rgb(72, 65, 155);
+}
+
+.filterContainer {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background-color: #fcfcfc;
+}
+
+.filterTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.checkboxGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #555;
+  user-select: none;
+}
+
+.checkboxLabel:hover {
+  color: #333;
+}
+
+.articleList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid #eee;
+}
+
+.articleItem {
+  display: block;
+  text-decoration: none;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.articleItem:hover {
+  background-color: #fafafa;
+}
+
+.boardName {
+  font-size: 0.85rem;
+  color: rgb(72, 65, 155);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.articleTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: #333;
+  display: block;
+  margin-bottom: 8px;
+  transition: color 0.2s;
+}
+
+.articleTitle:hover {
+  color: rgb(72, 65, 155);
+  text-decoration: underline;
+}
+
+.articleMeta {
+  font-size: 0.9rem;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.separator {
+  color: #ddd;
+}
+
+.loading,
+.error,
+.endMessage {
+  text-align: center;
+  padding: 2rem 0;
+  color: #666;
+}
