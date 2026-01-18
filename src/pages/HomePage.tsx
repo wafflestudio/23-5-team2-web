@@ -1,15 +1,18 @@
 // pages/HomePage.tsx
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Link } from 'react-router-dom';
 import { getArticles } from '../apis/articleApi';
-import { getBoards } from '../apis/boardApi';
+import { getBoards, getMySubscriptions, subscribeBoard, unsubscribeBoard, type Subscription } from '../apis/boardApi';
+import { useUserStore } from '../store/useUserStore';
 import styles from './HomePage.module.css';
 
 const HomePage = () => {
   const [keyword, setKeyword] = useState('');
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([]);
+  const queryClient = useQueryClient();
+  const { user } = useUserStore();
 
   // Infinite scroll intersection observer
   const { ref, inView } = useInView();
@@ -20,12 +23,16 @@ const HomePage = () => {
     queryFn: getBoards,
   });
 
-  // Effect to select all boards by default when boards load
+  // Track if we have initialized the selection
+  const hasInitialized = React.useRef(false);
+
+  // Effect to select all boards by default ONLY when boards first load
   useEffect(() => {
-    if (boards.length > 0 && selectedBoardIds.length === 0) {
+    if (boards.length > 0 && !hasInitialized.current) {
       setSelectedBoardIds(boards.map((b) => b.id));
+      hasInitialized.current = true;
     }
-  }, [boards, selectedBoardIds]);
+  }, [boards]);
 
   // Handle Select All
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,6 +86,48 @@ const HomePage = () => {
       return undefined;
     },
     enabled: selectedBoardIds.length > 0,
+  });
+
+  // 3. Fetch My Subscriptions
+  const { data: subscriptions = [] } = useQuery({
+    queryKey: ['subscriptions', user?.id],
+    queryFn: getMySubscriptions,
+    enabled: !!user,
+  });
+
+  const subscribeMutation = useMutation({
+    mutationFn: subscribeBoard,
+    onSuccess: (newSubscription) => {
+      // Update cache with the new subscription object returned from server
+      queryClient.setQueryData<Subscription[]>(['subscriptions', user?.id], (oldSubs = []) => {
+        return [...oldSubs, newSubscription];
+      });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      alert('구독되었습니다.');
+    },
+    onError: (error: any) => {
+      if (error.response?.status === 409) {
+        alert('이미 구독 중입니다.');
+        queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      } else {
+        alert('구독에 실패했습니다.');
+      }
+    },
+  });
+
+  const unsubscribeMutation = useMutation({
+    mutationFn: unsubscribeBoard,
+    onSuccess: (_, subscriptionId) => {
+      // Remove from cache
+      queryClient.setQueryData<Subscription[]>(['subscriptions', user?.id], (oldSubs = []) => {
+        return oldSubs.filter((sub) => sub.id !== subscriptionId);
+      });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      alert('구독이 취소되었습니다.');
+    },
+    onError: () => {
+      alert('구독 취소에 실패했습니다.');
+    },
   });
 
   // Infinite scroll trigger
@@ -138,7 +187,41 @@ const HomePage = () => {
                 to={`/article/${article.id}`}
                 className={styles.articleItem}
               >
-                <div className={styles.boardName}>[{article.board.name}]</div>
+                <div className={styles.boardName}>
+                  [{article.board.name}]
+                  {user && (
+                    /**
+                     * Find the subscription object for this board.
+                     */
+                    (() => {
+                      const subscription = subscriptions.find((sub: any) => sub.boardId === article.board.id);
+                      const isSubscribed = !!subscription;
+
+                      return (
+                        <button
+                          className={`${styles.subscribeButton} ${
+                            isSubscribed ? styles.subscribed : ''
+                          }`}
+                          onClick={(e) => {
+                            e.preventDefault();
+
+                            if (isSubscribed) {
+                              if (window.confirm('구독을 취소하시겠습니까?')) {
+                                unsubscribeMutation.mutate(subscription.id);
+                              }
+                            } else {
+                              if (window.confirm('이 게시판을 구독하시겠습니까?')) {
+                                subscribeMutation.mutate(article.board.id);
+                              }
+                            }
+                          }}
+                        >
+                          {isSubscribed ? '✔ 구독중' : '구독'}
+                        </button>
+                      );
+                    })()
+                  )}
+                </div>
                 <div className={styles.articleTitle}>{article.title}</div>
                 <div className={styles.articleMeta}>
                   <span>{article.author}</span>

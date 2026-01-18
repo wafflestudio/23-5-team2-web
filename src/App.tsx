@@ -9,6 +9,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import MyPage from './pages/MyPage';
 import RegisterPage from './pages/RegisterPage';
+import Inbox from './pages/Inbox';
 import { useUserStore } from './store/useUserStore';
 
 const App = () => {
@@ -30,6 +31,7 @@ const App = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/inbox" element={<Inbox />} />
         </Routes>
       </main>
       <Footer />

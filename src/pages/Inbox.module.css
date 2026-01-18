@@ -1,0 +1,206 @@
+/* Main Page Container (similar to HomePage) */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  padding: 20px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: #333;
+  text-align: center; /* Or left if preferred, usually center for titles */
+}
+
+.inboxWrapper {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 2rem;
+  align-items: flex-start;
+  position: relative; /* For sticky sidebar context */
+}
+
+/* Left side: Subscribed Boards Sidebar */
+.sidebarArea {
+  width: 240px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 20px;
+}
+
+/* Right side: Notification List */
+.notificationList {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 400px; /* Ensure height for vertical centering */
+}
+
+.headerAction {
+  display: none;
+}
+
+.markReadBtn {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.markReadBtn:hover {
+  background-color: #e2e6ea;
+}
+
+.notificationItem {
+  padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.unread {
+  border-left: 3px solid #3b82f6;
+  padding-left: 12px;
+}
+
+.itemCategory {
+  color: #3b82f6;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.itemTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1a1a1a;
+}
+
+.itemFooter {
+  font-size: 12px;
+  color: #888;
+}
+
+.divider {
+  margin: 0 8px;
+}
+
+.emptyNotice {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  white-space: nowrap; /* Ensure single line */
+}
+
+/* Subscribed Boards Section (Now in Sidebar) */
+.subscribedSection {
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.sidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sectionTitle {
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.editButton {
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.editButton:hover {
+  background-color: #eee;
+  color: #333;
+}
+
+.boardList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.boardTag {
+  background-color: white;
+  border: 1px solid rgb(72, 65, 155);
+  color: rgb(72, 65, 155);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: default;
+  transition: all 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.boardTag:hover {
+  background-color: rgba(72, 65, 155, 0.1);
+}
+
+.boardTag.editing {
+  cursor: pointer;
+}
+
+.boardTag.editing:hover {
+  transform: translateY(-1px);
+}
+
+.boardTag.active {
+  background-color: rgb(72, 65, 155);
+  color: white;
+  box-shadow: 0 2px 4px rgba(72, 65, 155, 0.3);
+}
+
+.boardTag.inactive {
+  background-color: #f1f1f1;
+  border-color: #ccc;
+  color: #999;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.boardTag.inactive:hover {
+  background-color: #e5e5e5;
+  color: #777;
+}
+
+.checkIcon {
+  font-size: 0.7em;
+}
+
+.noSubscriptions {
+  color: #888;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+

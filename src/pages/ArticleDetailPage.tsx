@@ -1,12 +1,16 @@
 // pages/ArticleDetailPage.tsx
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getArticleDetail } from '../apis/articleApi';
+import { getMySubscriptions, subscribeBoard, unsubscribeBoard, type Subscription } from '../apis/boardApi';
+import { useUserStore } from '../store/useUserStore';
 import styles from './ArticleDetailPage.module.css';
 
 const ArticleDetailPage = () => {
   const { articleId } = useParams<{ articleId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useUserStore();
 
   const {
     data: article,
@@ -18,6 +22,46 @@ const ArticleDetailPage = () => {
     queryFn: () => getArticleDetail(Number(articleId)),
     enabled: !!articleId,
     retry: 1,
+  });
+
+  // Fetch My Subscriptions
+  const { data: subscriptions = [] } = useQuery({
+    queryKey: ['subscriptions', user?.id],
+    queryFn: getMySubscriptions,
+    enabled: !!user,
+  });
+
+  const subscribeMutation = useMutation({
+    mutationFn: subscribeBoard,
+    onSuccess: (newSubscription) => {
+      queryClient.setQueryData<Subscription[]>(['subscriptions', user?.id], (oldSubs = []) => {
+        return [...oldSubs, newSubscription];
+      });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      alert('구독되었습니다.');
+    },
+    onError: (error: any) => {
+      if (error.response?.status === 409) {
+        alert('이미 구독 중입니다.');
+        queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      } else {
+        alert('구독에 실패했습니다.');
+      }
+    },
+  });
+
+  const unsubscribeMutation = useMutation({
+    mutationFn: unsubscribeBoard,
+    onSuccess: (_, subscriptionId) => {
+      queryClient.setQueryData<Subscription[]>(['subscriptions', user?.id], (oldSubs = []) => {
+        return oldSubs.filter((sub) => sub.id !== subscriptionId);
+      });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      alert('구독이 취소되었습니다.');
+    },
+    onError: () => {
+      alert('구독 취소에 실패했습니다.');
+    },
   });
 
   if (isLoading) {
@@ -49,7 +93,38 @@ const ArticleDetailPage = () => {
       </button>
 
       <div className={styles.articleHeader}>
-        <div className={styles.boardName}>[{article.board.name}]</div>
+        <div className={styles.boardName}>
+          [{article.board.name}]
+          {user && (
+            (() => {
+              const subscription = subscriptions.find((sub: any) => sub.boardId === article.board.id);
+              const isSubscribed = !!subscription;
+
+              return (
+                <button
+                  className={`${styles.subscribeButton} ${
+                    isSubscribed ? styles.subscribed : ''
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+
+                    if (isSubscribed) {
+                      if (window.confirm('구독을 취소하시겠습니까?')) {
+                        unsubscribeMutation.mutate(subscription.id);
+                      }
+                    } else {
+                      if (window.confirm('이 게시판을 구독하시겠습니까?')) {
+                        subscribeMutation.mutate(article.board.id);
+                      }
+                    }
+                  }}
+                >
+                  {isSubscribed ? '✔ 구독중' : '구독'}
+                </button>
+              );
+            })()
+          )}
+        </div>
         <h1 className={styles.title}>{article.title}</h1>
         <div className={styles.metaInfo}>
           <div>
