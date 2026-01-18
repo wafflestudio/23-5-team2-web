@@ -1,10 +1,22 @@
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 // pages/HomePage.tsx
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Link } from 'react-router-dom';
 import { getArticles } from '../apis/articleApi';
-import { getBoards, getMySubscriptions, subscribeBoard, unsubscribeBoard, type Subscription } from '../apis/boardApi';
+import {
+  type Subscription,
+  getBoards,
+  getMySubscriptions,
+  subscribeBoard,
+  unsubscribeBoard,
+} from '../apis/boardApi';
 import { useUserStore } from '../store/useUserStore';
 import styles from './HomePage.module.css';
 
@@ -99,13 +111,16 @@ const HomePage = () => {
     mutationFn: subscribeBoard,
     onSuccess: (newSubscription) => {
       // Update cache with the new subscription object returned from server
-      queryClient.setQueryData<Subscription[]>(['subscriptions', user?.id], (oldSubs = []) => {
-        return [...oldSubs, newSubscription];
-      });
+      queryClient.setQueryData<Subscription[]>(
+        ['subscriptions', user?.id],
+        (oldSubs = []) => {
+          return [...oldSubs, newSubscription];
+        }
+      );
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       alert('구독되었습니다.');
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       if (error.response?.status === 409) {
         alert('이미 구독 중입니다.');
         queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
@@ -119,9 +134,12 @@ const HomePage = () => {
     mutationFn: unsubscribeBoard,
     onSuccess: (_, subscriptionId) => {
       // Remove from cache
-      queryClient.setQueryData<Subscription[]>(['subscriptions', user?.id], (oldSubs = []) => {
-        return oldSubs.filter((sub) => sub.id !== subscriptionId);
-      });
+      queryClient.setQueryData<Subscription[]>(
+        ['subscriptions', user?.id],
+        (oldSubs = []) => {
+          return oldSubs.filter((sub) => sub.id !== subscriptionId);
+        }
+      );
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       alert('구독이 취소되었습니다.');
     },
@@ -189,12 +207,14 @@ const HomePage = () => {
               >
                 <div className={styles.boardName}>
                   [{article.board.name}]
-                  {user && (
+                  {user &&
                     /**
                      * Find the subscription object for this board.
                      */
                     (() => {
-                      const subscription = subscriptions.find((sub: any) => sub.boardId === article.board.id);
+                      const subscription = subscriptions.find(
+                        (sub) => sub.boardId === article.board.id
+                      );
                       const isSubscribed = !!subscription;
 
                       return (
@@ -210,7 +230,9 @@ const HomePage = () => {
                                 unsubscribeMutation.mutate(subscription.id);
                               }
                             } else {
-                              if (window.confirm('이 게시판을 구독하시겠습니까?')) {
+                              if (
+                                window.confirm('이 게시판을 구독하시겠습니까?')
+                              ) {
                                 subscribeMutation.mutate(article.board.id);
                               }
                             }
@@ -219,8 +241,7 @@ const HomePage = () => {
                           {isSubscribed ? '✔ 구독중' : '구독'}
                         </button>
                       );
-                    })()
-                  )}
+                    })()}
                 </div>
                 <div className={styles.articleTitle}>{article.title}</div>
                 <div className={styles.articleMeta}>

@@ -1,21 +1,26 @@
-import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getArticles } from '../apis/articleApi';
-import { getBoards, getMySubscriptions, unsubscribeBoard } from '../apis/boardApi';
+import {
+  getBoards,
+  getMySubscriptions,
+  unsubscribeBoard,
+} from '../apis/boardApi';
 import { useUserStore } from '../store/useUserStore';
 import type { Article } from '../types/article';
 import styles from './Inbox.module.css';
 
 const Inbox = () => {
   const { user } = useUserStore();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   const [inboxMessages, setInboxMessages] = useState<Article[]>([]);
   // activeFilters removed as it conflicted with history persistence and was unused
   const [isEditing, setIsEditing] = useState(false);
-  const [inactiveBoardIds, setInactiveBoardIds] = useState<Set<number>>(new Set());
+  const [inactiveBoardIds, setInactiveBoardIds] = useState<Set<number>>(
+    new Set()
+  );
 
   // Unsubscribe Mutation
   const unsubscribeMutation = useMutation({
@@ -26,7 +31,7 @@ const Inbox = () => {
     onError: (error) => {
       console.error('Failed to unsubscribe', error);
       alert('구독 취소에 실패했습니다.');
-    }
+    },
   });
 
   // 1. Initial Load from LocalStorage
@@ -57,18 +62,19 @@ const Inbox = () => {
   });
 
   const subscribedBoards = boards.filter((board) =>
-    subscriptions.some((sub: any) => sub.boardId === board.id)
+    subscriptions.some((sub) => sub.boardId === board.id)
   );
-  
-  const subscribedBoardIds = subscribedBoards.map(b => b.id).join(',');
+
+  const subscribedBoardIds = subscribedBoards.map((b) => b.id).join(',');
 
   // 3. Fetch Candidate Articles (From current subscriptions)
   const { data: articleData } = useQuery({
     queryKey: ['todaysArticles', subscribedBoardIds],
-    queryFn: () => getArticles({
-      boardids: subscribedBoardIds,
-      limit: 50
-    }),
+    queryFn: () =>
+      getArticles({
+        boardids: subscribedBoardIds,
+        limit: 50,
+      }),
     enabled: !!user && subscribedBoardIds.length > 0,
     refetchInterval: 30000,
   });
@@ -80,23 +86,28 @@ const Inbox = () => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const newCandidates = articleData.data.filter(article => {
+    const newCandidates = articleData.data.filter((article) => {
       const pubDate = new Date(article.publishedAt);
       return pubDate >= oneWeekAgo;
     });
 
     if (newCandidates.length > 0) {
-      setInboxMessages(prev => {
-        const existingIds = new Set(prev.map(p => p.id));
-        const trulyNew = newCandidates.filter(c => !existingIds.has(c.id));
-        
+      setInboxMessages((prev) => {
+        const existingIds = new Set(prev.map((p) => p.id));
+        const trulyNew = newCandidates.filter((c) => !existingIds.has(c.id));
+
         if (trulyNew.length === 0) return prev;
 
-        const updated = [...trulyNew, ...prev].sort((a, b) => 
-          new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+        const updated = [...trulyNew, ...prev].sort(
+          (a, b) =>
+            new Date(b.publishedAt).getTime() -
+            new Date(a.publishedAt).getTime()
         );
 
-        localStorage.setItem(`inbox_notifications_${user.id}`, JSON.stringify(updated));
+        localStorage.setItem(
+          `inbox_notifications_${user.id}`,
+          JSON.stringify(updated)
+        );
         return updated;
       });
     }
@@ -104,15 +115,15 @@ const Inbox = () => {
 
   const handleTagClick = (boardId: number) => {
     if (isEditing) {
-      const subscription = subscriptions.find((sub: any) => sub.boardId === boardId);
+      const subscription = subscriptions.find((sub) => sub.boardId === boardId);
       if (subscription) {
-         if (window.confirm('정말 구독을 취소하시겠습니까?')) {
-            unsubscribeMutation.mutate(subscription.id);
-         }
+        if (window.confirm('정말 구독을 취소하시겠습니까?')) {
+          unsubscribeMutation.mutate(subscription.id);
+        }
       }
     } else {
       // Toggle filter
-      setInactiveBoardIds(prev => {
+      setInactiveBoardIds((prev) => {
         const next = new Set(prev);
         if (next.has(boardId)) {
           next.delete(boardId);
@@ -124,7 +135,9 @@ const Inbox = () => {
     }
   };
 
-  const filteredMessages = inboxMessages.filter(msg => !inactiveBoardIds.has(msg.board.id));
+  const filteredMessages = inboxMessages.filter(
+    (msg) => !inactiveBoardIds.has(msg.board.id)
+  );
 
   return (
     <div className={styles.container}>
@@ -132,28 +145,27 @@ const Inbox = () => {
       <h2 className={styles.pageTitle}>수신함 (Inbox)</h2>
 
       <div className={styles.inboxWrapper}>
-        
         {/* Left: Subscribed Boards Sidebar */}
         {user && (
           <aside className={styles.sidebarArea}>
             <div className={styles.subscribedSection}>
               <div className={styles.sidebarHeader}>
                 <h3 className={styles.sectionTitle}>✨ 구독 게시판</h3>
-                <button 
+                <button
                   className={styles.editButton}
                   onClick={() => setIsEditing(!isEditing)}
                 >
                   {isEditing ? '완료' : '편집'}
                 </button>
               </div>
-              
+
               <div className={styles.boardList}>
                 {subscribedBoards.length > 0 ? (
                   subscribedBoards.map((board) => {
                     const isActive = !inactiveBoardIds.has(board.id);
                     return (
-                      <div 
-                        key={board.id} 
+                      <div
+                        key={board.id}
                         className={`
                           ${styles.boardTag} 
                           ${isActive ? styles.active : styles.inactive}
@@ -162,8 +174,12 @@ const Inbox = () => {
                         onClick={() => handleTagClick(board.id)}
                       >
                         {board.name}
-                        {isEditing && <span className={styles.deleteIcon}>✕</span>}
-                        {!isEditing && <span className={styles.checkIcon}>✔</span>}
+                        {isEditing && (
+                          <span className={styles.deleteIcon}>✕</span>
+                        )}
+                        {!isEditing && (
+                          <span className={styles.checkIcon}>✔</span>
+                        )}
                       </div>
                     );
                   })
@@ -187,20 +203,24 @@ const Inbox = () => {
                 className={`${styles.notificationItem} ${styles.unread}`}
                 style={{ textDecoration: 'none', display: 'block' }}
               >
-                <div className={styles.itemCategory}>[{article.board.name}]</div>
+                <div className={styles.itemCategory}>
+                  [{article.board.name}]
+                </div>
                 <div className={styles.itemTitle}>{article.title}</div>
                 <div className={styles.itemFooter}>
                   <span className={styles.itemSender}>{article.author}</span>
                   <span className={styles.divider}>|</span>
-                  <span className={styles.itemDate}>{new Date(article.publishedAt).toLocaleString()}</span>
+                  <span className={styles.itemDate}>
+                    {new Date(article.publishedAt).toLocaleString()}
+                  </span>
                 </div>
               </Link>
             ))
           ) : (
             <p className={styles.emptyNotice}>
-              {inboxMessages.length === 0 
-                ? "수신함이 비어있습니다." 
-                : "선택된 게시판의 메시지가 없습니다."}
+              {inboxMessages.length === 0
+                ? '수신함이 비어있습니다.'
+                : '선택된 게시판의 메시지가 없습니다.'}
             </p>
           )}
         </div>

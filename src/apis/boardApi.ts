@@ -16,23 +16,26 @@ export interface Subscription {
 }
 
 export const getMySubscriptions = async (): Promise<Subscription[]> => {
-  const response = await api.get<any>('/v1/subscriptions');
-  console.log('API Response for subscriptions:', response.data);
-  
+  const response = await api.get('/v1/subscriptions');
+
   if (Array.isArray(response.data)) {
     return response.data;
   } else if (response.data && Array.isArray(response.data.subscriptions)) {
     return response.data.subscriptions;
   }
-  
+
   return [];
 };
 
-export const subscribeBoard = async (boardId: number): Promise<Subscription> => {
+export const subscribeBoard = async (
+  boardId: number
+): Promise<Subscription> => {
   const response = await api.post('/v1/subscriptions', { boardId });
   return response.data;
 };
 
-export const unsubscribeBoard = async (SubscriptionId: number): Promise<void> => {
+export const unsubscribeBoard = async (
+  SubscriptionId: number
+): Promise<void> => {
   await api.delete(`/v1/subscriptions/${SubscriptionId}`);
 };

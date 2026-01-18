@@ -6,10 +6,10 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import ArticleDetailPage from './pages/ArticleDetailPage';
 import HomePage from './pages/HomePage';
+import Inbox from './pages/Inbox';
 import LoginPage from './pages/LoginPage';
 import MyPage from './pages/MyPage';
 import RegisterPage from './pages/RegisterPage';
-import Inbox from './pages/Inbox';
 import { useUserStore } from './store/useUserStore';
 
 const App = () => {

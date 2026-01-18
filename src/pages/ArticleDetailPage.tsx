@@ -1,8 +1,14 @@
-// pages/ArticleDetailPage.tsx
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+// pages/ArticleDetailPage.tsx
+import { AxiosError } from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getArticleDetail } from '../apis/articleApi';
-import { getMySubscriptions, subscribeBoard, unsubscribeBoard, type Subscription } from '../apis/boardApi';
+import {
+  type Subscription,
+  getMySubscriptions,
+  subscribeBoard,
+  unsubscribeBoard,
+} from '../apis/boardApi';
 import { useUserStore } from '../store/useUserStore';
 import styles from './ArticleDetailPage.module.css';
 
@@ -34,13 +40,16 @@ const ArticleDetailPage = () => {
   const subscribeMutation = useMutation({
     mutationFn: subscribeBoard,
     onSuccess: (newSubscription) => {
-      queryClient.setQueryData<Subscription[]>(['subscriptions', user?.id], (oldSubs = []) => {
-        return [...oldSubs, newSubscription];
-      });
+      queryClient.setQueryData<Subscription[]>(
+        ['subscriptions', user?.id],
+        (oldSubs = []) => {
+          return [...oldSubs, newSubscription];
+        }
+      );
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       alert('구독되었습니다.');
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       if (error.response?.status === 409) {
         alert('이미 구독 중입니다.');
         queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
@@ -53,9 +62,12 @@ const ArticleDetailPage = () => {
   const unsubscribeMutation = useMutation({
     mutationFn: unsubscribeBoard,
     onSuccess: (_, subscriptionId) => {
-      queryClient.setQueryData<Subscription[]>(['subscriptions', user?.id], (oldSubs = []) => {
-        return oldSubs.filter((sub) => sub.id !== subscriptionId);
-      });
+      queryClient.setQueryData<Subscription[]>(
+        ['subscriptions', user?.id],
+        (oldSubs = []) => {
+          return oldSubs.filter((sub) => sub.id !== subscriptionId);
+        }
+      );
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       alert('구독이 취소되었습니다.');
     },
@@ -95,9 +107,11 @@ const ArticleDetailPage = () => {
       <div className={styles.articleHeader}>
         <div className={styles.boardName}>
           [{article.board.name}]
-          {user && (
+          {user &&
             (() => {
-              const subscription = subscriptions.find((sub: any) => sub.boardId === article.board.id);
+              const subscription = subscriptions.find(
+                (sub) => sub.boardId === article.board.id
+              );
               const isSubscribed = !!subscription;
 
               return (
@@ -122,8 +136,7 @@ const ArticleDetailPage = () => {
                   {isSubscribed ? '✔ 구독중' : '구독'}
                 </button>
               );
-            })()
-          )}
+            })()}
         </div>
         <h1 className={styles.title}>{article.title}</h1>
         <div className={styles.metaInfo}>
