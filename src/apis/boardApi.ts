@@ -15,6 +15,7 @@ export interface Subscription {
   boardId: number;
 }
 
+// Any needed to handle potential response structure variations until confirmed
 export const getMySubscriptions = async (): Promise<Subscription[]> => {
   const response = await api.get('/v1/subscriptions');
 
@@ -35,7 +36,7 @@ export const subscribeBoard = async (
 };
 
 export const unsubscribeBoard = async (
-  SubscriptionId: number
+  subscriptionId: number
 ): Promise<void> => {
-  await api.delete(`/v1/subscriptions/${SubscriptionId}`);
+  await api.delete(`/v1/subscriptions/${subscriptionId}`);
 };

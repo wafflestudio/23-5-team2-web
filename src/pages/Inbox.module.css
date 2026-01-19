@@ -137,8 +137,10 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
-  min-height: 400px; /* Ensure height for vertical centering */
+  min-height: 1050px; /* Approx 15 items * 70px */
 }
+
+
 
 .headerAction {
   display: none;
@@ -368,4 +370,38 @@
   color: #888;
   font-size: 0.85rem;
   font-style: italic;
+}
+
+/* Pagination Controls */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: auto;
+  gap: 16px;
+  padding-top: 20px;
+}
+
+.pageBtn {
+  background-color: white;
+  border: 1px solid #ddd;
+  color: #333;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background-color: #f1f1f1;
+}
+
+.pageBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageNumber {
+  font-weight: 600;
+  color: #333;
 }

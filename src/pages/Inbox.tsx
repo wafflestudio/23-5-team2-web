@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -31,14 +31,50 @@ const Inbox = () => {
     },
   });
 
-  // 1. Fetch Inboxes
-  const { data: inboxMessages = [] } = useQuery({
+  // 1. Fetch Inboxes with Pagination
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['inbox', user?.id],
-    queryFn: getInboxes,
+    queryFn: ({ pageParam }) => getInboxes({ ...pageParam, limit: 15 }),
+    initialPageParam: { limit: 15 },
+    getNextPageParam: (lastPage) => {
+      if (!lastPage.paging.hasNext) return undefined;
+      return {
+        nextPublishedAt: lastPage.paging.nextPublishedAt,
+        nextId: lastPage.paging.nextId,
+        limit: 15,
+      };
+    },
     enabled: !!user,
   });
 
-  // 2. Fetch Helper Data (Boards & Subscriptions)
+  // Pagination State
+  const [pageIndex, setPageIndex] = useState(0);
+
+  const currentPageData = data?.pages[pageIndex]?.data || [];
+  
+  const handleNextPage = () => {
+    if (pageIndex < (data?.pages.length || 0) - 1) {
+      setPageIndex(pageIndex + 1);
+    } else if (hasNextPage) {
+      fetchNextPage().then(() => setPageIndex(pageIndex + 1));
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (pageIndex > 0) {
+      setPageIndex(pageIndex - 1);
+    }
+  };
+
+  const inboxMessages = currentPageData;
+
+  // ... (Boards & Subscriptions)
+  // ... (Boards & Subscriptions)
   const { data: boards = [] } = useQuery({
     queryKey: ['boards'],
     queryFn: getBoards,
@@ -101,7 +137,7 @@ const Inbox = () => {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   const filteredMessages = inboxMessages.filter(
-    (msg) => msg.board && !inactiveBoardIds.has(msg.board.id)
+    (msg) => msg && msg.board && !inactiveBoardIds.has(msg.board.id)
   );
 
   const toggleSelectionMode = () => {
@@ -162,14 +198,19 @@ const Inbox = () => {
     readMutation.mutate(id);
   };
 
+  // ...
+
+  // Update render to show pagination controls instead of Load More
   return (
     <div className={styles.container}>
-      {/* Page Title & Bulk Actions */}
+      {/* ... Header ... */}
       <div className={styles.headerArea}>
         <h2 className={styles.pageTitle}>수신함 (Inbox)</h2>
+        {/* Bulk Actions rendered conditionally on filteredMessages > 0 OR if we want to support selection on empty? No, filtered > 0 usually */}
         {filteredMessages.length > 0 && (
           <div className={styles.bulkActions}>
-            {!isSelectionMode ? (
+             {/* ... existing bulk actions ... */}
+             {!isSelectionMode ? (
               <button
                 className={styles.selectModeBtn}
                 onClick={toggleSelectionMode}
@@ -177,7 +218,8 @@ const Inbox = () => {
                 선택
               </button>
             ) : (
-              <div className={styles.selectionControls}>
+                // ... selection controls ...
+                <div className={styles.selectionControls}>
                 <div
                   className={styles.selectAllContainer}
                   onClick={handleSelectAll}
@@ -189,7 +231,7 @@ const Inbox = () => {
                         filteredMessages.length > 0 &&
                         selectedIds.size === filteredMessages.length
                       }
-                      readOnly // Controlled by div click
+                      readOnly
                     />
                     전체 선택
                   </label>
@@ -218,10 +260,11 @@ const Inbox = () => {
       </div>
 
       <div className={styles.inboxWrapper}>
-        {/* Left: Subscribed Boards Sidebar */}
+        {/* Sidebar ... */}
         {user && (
           <aside className={styles.sidebarArea}>
-            <div className={styles.subscribedSection}>
+             {/* ... */}
+             <div className={styles.subscribedSection}>
               <div className={styles.sidebarHeader}>
                 <h3 className={styles.sectionTitle}>✨ 구독 게시판</h3>
                 <button
@@ -269,52 +312,54 @@ const Inbox = () => {
         {/* Right: Message List */}
         <div className={styles.notificationList}>
           {filteredMessages.length > 0 ? (
-            filteredMessages.map((article) => (
-              <div
-                key={article.id}
-                className={styles.itemWrapper}
-                style={{ position: 'relative' }}
-              >
-                {isSelectionMode && (
-                  <div
-                    className={styles.checkboxArea}
-                    onClick={(e) => handleSelect(e, article.id)}
+            <>
+              {filteredMessages.map((article) => (
+                <div
+                  key={article.id}
+                  className={styles.itemWrapper}
+                  style={{ position: 'relative' }}
+                >
+                  {isSelectionMode && (
+                     <div
+                      className={styles.checkboxArea}
+                      onClick={(e) => handleSelect(e, article.id)}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(article.id)}
+                        readOnly
+                        style={{ pointerEvents: 'none' }} 
+                      />
+                    </div>
+                  )}
+                  <Link
+                    to={`/article/${article.id}`}
+                    className={`${styles.notificationItem} ${!article.isRead ? styles.unread : ''}`}
+                    style={{ textDecoration: 'none', display: 'block' }}
+                    onClick={() => handleRead(article.id)}
                   >
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(article.id)}
-                      readOnly
-                      style={{ pointerEvents: 'none' }} // Prevent double events
-                    />
-                  </div>
-                )}
-                <Link
-                  to={`/article/${article.id}`}
-                  className={`${styles.notificationItem} ${!article.isRead ? styles.unread : ''}`}
-                  style={{ textDecoration: 'none', display: 'block' }}
-                  onClick={() => handleRead(article.id)}
-                >
-                  <div className={styles.itemCategory}>
-                    [{article.board?.name || 'Unknown Board'}]
-                  </div>
-                  <div className={styles.itemTitle}>{article.title}</div>
-                  <div className={styles.itemFooter}>
-                    <span className={styles.itemSender}>{article.author}</span>
-                    <span className={styles.divider}>|</span>
-                    <span className={styles.itemDate}>
-                      {new Date(article.publishedAt).toLocaleString()}
-                    </span>
-                  </div>
-                </Link>
-                <button
-                  className={styles.deleteButton}
-                  onClick={(e) => handleDelete(e, article.id)}
-                  title="삭제"
-                >
-                  🗑️
-                </button>
-              </div>
-            ))
+                    <div className={styles.itemCategory}>
+                      [{article.board?.name || 'Unknown Board'}]
+                    </div>
+                    <div className={styles.itemTitle}>{article.title}</div>
+                    <div className={styles.itemFooter}>
+                      <span className={styles.itemSender}>{article.author}</span>
+                      <span className={styles.divider}>|</span>
+                      <span className={styles.itemDate}>
+                        {new Date(article.publishedAt).toLocaleString()}
+                      </span>
+                    </div>
+                  </Link>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={(e) => handleDelete(e, article.id)}
+                    title="삭제"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              ))}
+            </>
           ) : (
             <p className={styles.emptyNotice}>
               {inboxMessages.length === 0
@@ -322,6 +367,26 @@ const Inbox = () => {
                 : '선택된 게시판의 메시지가 없습니다.'}
             </p>
           )}
+          
+          {/* Pagination Controls */}
+          {/* Show even if empty list if user requested "show 1 when no messages" */}
+          <div className={styles.pagination}>
+            <button 
+              className={styles.pageBtn} 
+              onClick={handlePrevPage}
+              disabled={pageIndex === 0}
+            >
+              &lt; Prev
+            </button>
+            <span className={styles.pageNumber}>Page {pageIndex + 1}</span>
+            <button 
+              className={styles.pageBtn} 
+              onClick={handleNextPage}
+              disabled={(!hasNextPage && pageIndex === (data?.pages.length || 0) - 1) || isFetchingNextPage}
+            >
+              Next &gt;
+            </button>
+          </div>
         </div>
       </div>
     </div>
