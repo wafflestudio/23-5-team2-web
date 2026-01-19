@@ -15,6 +15,105 @@
   text-align: center; /* Or left if preferred, usually center for titles */
 }
 
+.headerArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.bulkActions {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 600px;
+}
+
+.selectModeBtn {
+  background-color: transparent;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  padding: 6px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.selectModeBtn:hover {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.selectionControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background-color: #f8f9fa;
+  padding: 10px 16px;
+  border-radius: 8px;
+}
+
+.selectAllContainer {
+  cursor: pointer;
+}
+
+.selectAllLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}
+
+.selectAllLabel input {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cancelSelectionBtn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #999;
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancelSelectionBtn:hover {
+  color: #333;
+}
+
+.bulkDeleteBtn {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.bulkDeleteBtn:hover {
+  background-color: #e60000;
+}
+
 .inboxWrapper {
   display: flex;
   flex-direction: row;
@@ -61,12 +160,79 @@
 
 .notificationItem {
   padding: 16px 0;
-  border-bottom: 1px solid #eee;
+}
+
+.unread .itemTitle {
+  font-weight: 700; /* Bolder text for unread */
 }
 
 .unread {
   border-left: 3px solid #3b82f6;
   padding-left: 12px;
+}
+
+.itemWrapper {
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.itemWrapper:hover {
+  background-color: #f8f9fa;
+}
+
+.itemWrapper:hover .deleteButton {
+  opacity: 1;
+}
+
+.itemWrapper {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+  padding-left: 10px;
+}
+
+.checkboxArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.checkboxArea input {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.deleteButton {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+  padding: 8px;
+  border-radius: 50%;
+  color: #999;
+  z-index: 10;
+}
+
+.deleteButton:hover {
+  background-color: #ffeaea;
+  color: #ff4d4d;
+}
+
+.notificationItem {
+  padding: 16px 0;
+  /* border-bottom removed from here as it's now on wrapper */
+  display: block;
+  padding-right: 48px; /* Make space for delete button */
 }
 
 .itemCategory {

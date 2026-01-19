@@ -1,22 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getArticles } from '../apis/articleApi';
+import { getInboxes, deleteInbox, readInbox } from '../apis/inboxApi';
 import {
   getBoards,
   getMySubscriptions,
   unsubscribeBoard,
 } from '../apis/boardApi';
 import { useUserStore } from '../store/useUserStore';
-import type { Article } from '../types/article';
+
 import styles from './Inbox.module.css';
 
 const Inbox = () => {
   const { user } = useUserStore();
   const queryClient = useQueryClient();
-
-  const [inboxMessages, setInboxMessages] = useState<Article[]>([]);
-  // activeFilters removed as it conflicted with history persistence and was unused
   const [isEditing, setIsEditing] = useState(false);
   const [inactiveBoardIds, setInactiveBoardIds] = useState<Set<number>>(
     new Set()
@@ -34,22 +31,14 @@ const Inbox = () => {
     },
   });
 
-  // 1. Initial Load from LocalStorage
-  useEffect(() => {
-    if (user) {
-      const savedKey = `inbox_notifications_${user.id}`;
-      const saved = localStorage.getItem(savedKey);
-      if (saved) {
-        try {
-          setInboxMessages(JSON.parse(saved));
-        } catch (e) {
-          console.error('Failed to parse inbox messages', e);
-        }
-      }
-    }
-  }, [user]);
+  // 1. Fetch Inboxes
+  const { data: inboxMessages = [] } = useQuery({
+    queryKey: ['inbox', user?.id],
+    queryFn: getInboxes,
+    enabled: !!user,
+  });
 
-  // 2. Fetch Helper Data
+  // 2. Fetch Helper Data (Boards & Subscriptions)
   const { data: boards = [] } = useQuery({
     queryKey: ['boards'],
     queryFn: getBoards,
@@ -64,54 +53,6 @@ const Inbox = () => {
   const subscribedBoards = boards.filter((board) =>
     subscriptions.some((sub) => sub.boardId === board.id)
   );
-
-  const subscribedBoardIds = subscribedBoards.map((b) => b.id).join(',');
-
-  // 3. Fetch Candidate Articles (From current subscriptions)
-  const { data: articleData } = useQuery({
-    queryKey: ['todaysArticles', subscribedBoardIds],
-    queryFn: () =>
-      getArticles({
-        boardids: subscribedBoardIds,
-        limit: 50,
-      }),
-    enabled: !!user && subscribedBoardIds.length > 0,
-    refetchInterval: 30000,
-  });
-
-  // 4. Sync Logic: "Receive" new messages from today
-  useEffect(() => {
-    if (!articleData?.data || !user) return;
-
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-    const newCandidates = articleData.data.filter((article) => {
-      const pubDate = new Date(article.publishedAt);
-      return pubDate >= oneWeekAgo;
-    });
-
-    if (newCandidates.length > 0) {
-      setInboxMessages((prev) => {
-        const existingIds = new Set(prev.map((p) => p.id));
-        const trulyNew = newCandidates.filter((c) => !existingIds.has(c.id));
-
-        if (trulyNew.length === 0) return prev;
-
-        const updated = [...trulyNew, ...prev].sort(
-          (a, b) =>
-            new Date(b.publishedAt).getTime() -
-            new Date(a.publishedAt).getTime()
-        );
-
-        localStorage.setItem(
-          `inbox_notifications_${user.id}`,
-          JSON.stringify(updated)
-        );
-        return updated;
-      });
-    }
-  }, [articleData, user]);
 
   const handleTagClick = (boardId: number) => {
     if (isEditing) {
@@ -135,14 +76,148 @@ const Inbox = () => {
     }
   };
 
+  // Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteInbox(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inbox'] });
+    },
+    onError: (error) => {
+      console.error('Failed to delete message', error);
+      alert('메시지 삭제에 실패했습니다.');
+    },
+  });
+
+  const handleDelete = (e: React.MouseEvent, id: number) => {
+    e.preventDefault(); // Prevent Link navigation
+    e.stopPropagation();
+    if (window.confirm('정말 삭제하시겠습니까?')) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  // Bulk Delete & Selection Mode
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+
   const filteredMessages = inboxMessages.filter(
-    (msg) => !inactiveBoardIds.has(msg.board.id)
+    (msg) => msg.board && !inactiveBoardIds.has(msg.board.id)
   );
+
+  const toggleSelectionMode = () => {
+    setIsSelectionMode((prev) => !prev);
+    setSelectedIds(new Set()); // Clear selection when toggling
+  };
+
+  const handleSelect = (e: React.MouseEvent, id: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === filteredMessages.length) {
+       setSelectedIds(new Set());
+    } else {
+       setSelectedIds(new Set(filteredMessages.map((msg) => msg.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (window.confirm(`${selectedIds.size}개의 메시지를 삭제하시겠습니까?`)) {
+      try {
+        await Promise.all(
+          Array.from(selectedIds).map((id) => deleteInbox(id))
+        );
+        queryClient.invalidateQueries({ queryKey: ['inbox'] });
+        setSelectedIds(new Set());
+        // Optional: Exit selection mode after delete? User might want to delete more. Keeping it for now.
+        setIsSelectionMode(false); 
+        alert('삭제되었습니다.');
+      } catch (e) {
+        console.error('Bulk delete failed', e);
+        alert('일부 메시지 삭제에 실패했습니다.');
+        queryClient.invalidateQueries({ queryKey: ['inbox'] });
+      }
+    }
+  };
+
+  // Read Mutation
+  const readMutation = useMutation({
+    mutationFn: (id: number) => readInbox(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inbox'] });
+    },
+    onError: (error) => {
+      console.error('Failed to mark as read', error);
+    },
+  });
+
+  const handleRead = (id: number) => {
+    if (isSelectionMode) return; // Prevent reading in selection mode if clicked (though wrapper handles it)
+    readMutation.mutate(id);
+  };
 
   return (
     <div className={styles.container}>
-      {/* Page Title */}
-      <h2 className={styles.pageTitle}>수신함 (Inbox)</h2>
+      {/* Page Title & Bulk Actions */}
+      <div className={styles.headerArea}>
+        <h2 className={styles.pageTitle}>수신함 (Inbox)</h2>
+        {filteredMessages.length > 0 && (
+          <div className={styles.bulkActions}>
+            {!isSelectionMode ? (
+              <button 
+                className={styles.selectModeBtn}
+                onClick={toggleSelectionMode}
+              >
+                선택
+              </button>
+            ) : (
+              <div className={styles.selectionControls}>
+                <div 
+                  className={styles.selectAllContainer} 
+                  onClick={handleSelectAll}
+                >
+                  <label className={styles.selectAllLabel}>
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredMessages.length > 0 &&
+                        selectedIds.size === filteredMessages.length
+                      }
+                      readOnly // Controlled by div click
+                    />
+                    전체 선택
+                  </label>
+                </div>
+                
+                <div className={styles.actionButtons}>
+                  {selectedIds.size > 0 && (
+                    <button
+                      className={styles.bulkDeleteBtn}
+                      onClick={handleBulkDelete}
+                    >
+                      삭제 ({selectedIds.size})
+                    </button>
+                  )}
+                  <button 
+                    className={styles.cancelSelectionBtn}
+                    onClick={toggleSelectionMode}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className={styles.inboxWrapper}>
         {/* Left: Subscribed Boards Sidebar */}
@@ -197,24 +272,46 @@ const Inbox = () => {
         <div className={styles.notificationList}>
           {filteredMessages.length > 0 ? (
             filteredMessages.map((article) => (
-              <Link
-                key={article.id}
-                to={`/article/${article.id}`}
-                className={`${styles.notificationItem} ${styles.unread}`}
-                style={{ textDecoration: 'none', display: 'block' }}
-              >
-                <div className={styles.itemCategory}>
-                  [{article.board.name}]
-                </div>
-                <div className={styles.itemTitle}>{article.title}</div>
-                <div className={styles.itemFooter}>
-                  <span className={styles.itemSender}>{article.author}</span>
-                  <span className={styles.divider}>|</span>
-                  <span className={styles.itemDate}>
-                    {new Date(article.publishedAt).toLocaleString()}
-                  </span>
-                </div>
-              </Link>
+              <div key={article.id} className={styles.itemWrapper} style={{ position: 'relative' }}>
+                {isSelectionMode && (
+                  <div 
+                    className={styles.checkboxArea}
+                    onClick={(e) => handleSelect(e, article.id)}
+                  >
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.has(article.id)}
+                      readOnly
+                      style={{ pointerEvents: 'none' }} // Prevent double events
+                    />
+                  </div>
+                )}
+                <Link
+                  to={`/article/${article.id}`}
+                  className={`${styles.notificationItem} ${!article.isRead ? styles.unread : ''}`}
+                  style={{ textDecoration: 'none', display: 'block' }}
+                  onClick={() => handleRead(article.id)}
+                >
+                  <div className={styles.itemCategory}>
+                    [{article.board?.name || 'Unknown Board'}]
+                  </div>
+                  <div className={styles.itemTitle}>{article.title}</div>
+                  <div className={styles.itemFooter}>
+                    <span className={styles.itemSender}>{article.author}</span>
+                    <span className={styles.divider}>|</span>
+                    <span className={styles.itemDate}>
+                      {new Date(article.publishedAt).toLocaleString()}
+                    </span>
+                  </div>
+                </Link>
+                <button 
+                  className={styles.deleteButton}
+                  onClick={(e) => handleDelete(e, article.id)}
+                  title="삭제"
+                >
+                  🗑️
+                </button>
+              </div>
             ))
           ) : (
             <p className={styles.emptyNotice}>

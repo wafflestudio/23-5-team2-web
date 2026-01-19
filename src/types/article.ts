@@ -11,6 +11,7 @@ export interface Article {
   publishedAt: string; // ISO8601
   createdAt: string;
   updatedAt: string;
+  isRead: boolean;
 }
 
 interface ArticlePaging {
