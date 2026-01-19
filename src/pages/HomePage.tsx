@@ -1,6 +1,6 @@
 // pages/HomePage.tsx
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Link } from 'react-router-dom';
 import { getArticles } from '../apis/articleApi';
@@ -10,6 +10,7 @@ import styles from './HomePage.module.css';
 const HomePage = () => {
   const [keyword, setKeyword] = useState('');
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([]);
+  const hasInitializedBoards = useRef(false);
 
   // Infinite scroll intersection observer
   const { ref, inView } = useInView();
@@ -22,10 +23,11 @@ const HomePage = () => {
 
   // Effect to select all boards by default when boards load
   useEffect(() => {
-    if (boards.length > 0 && selectedBoardIds.length === 0) {
+    if (boards.length > 0 && !hasInitializedBoards.current) {
       setSelectedBoardIds(boards.map((b) => b.id));
+      hasInitializedBoards.current = true;
     }
-  }, [boards, selectedBoardIds]);
+  }, [boards]);
 
   // Handle Select All
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +62,7 @@ const HomePage = () => {
     queryFn: ({ pageParam }) =>
       getArticles({
         keyword,
-        boardids:
+        boardIds:
           selectedBoardIds.length > 0 ? selectedBoardIds.join(',') : undefined,
         limit: 20,
         nextPublishedAt: pageParam?.nextPublishedAt,
