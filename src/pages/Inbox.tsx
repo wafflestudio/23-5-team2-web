@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -32,31 +37,27 @@ const Inbox = () => {
   });
 
   // 1. Fetch Inboxes with Pagination
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['inbox', user?.id],
-    queryFn: ({ pageParam }) => getInboxes({ ...pageParam, limit: 15 }),
-    initialPageParam: { limit: 15 },
-    getNextPageParam: (lastPage) => {
-      if (!lastPage.paging.hasNext) return undefined;
-      return {
-        nextPublishedAt: lastPage.paging.nextPublishedAt,
-        nextId: lastPage.paging.nextId,
-        limit: 15,
-      };
-    },
-    enabled: !!user,
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ['inbox', user?.id],
+      queryFn: ({ pageParam }) => getInboxes({ ...pageParam, limit: 15 }),
+      initialPageParam: { limit: 15 },
+      getNextPageParam: (lastPage) => {
+        if (!lastPage.paging.hasNext) return undefined;
+        return {
+          nextPublishedAt: lastPage.paging.nextPublishedAt,
+          nextId: lastPage.paging.nextId,
+          limit: 15,
+        };
+      },
+      enabled: !!user,
+    });
 
   // Pagination State
   const [pageIndex, setPageIndex] = useState(0);
 
   const currentPageData = data?.pages[pageIndex]?.data || [];
-  
+
   const handleNextPage = () => {
     if (pageIndex < (data?.pages.length || 0) - 1) {
       setPageIndex(pageIndex + 1);
@@ -209,8 +210,8 @@ const Inbox = () => {
         {/* Bulk Actions rendered conditionally on filteredMessages > 0 OR if we want to support selection on empty? No, filtered > 0 usually */}
         {filteredMessages.length > 0 && (
           <div className={styles.bulkActions}>
-             {/* ... existing bulk actions ... */}
-             {!isSelectionMode ? (
+            {/* ... existing bulk actions ... */}
+            {!isSelectionMode ? (
               <button
                 className={styles.selectModeBtn}
                 onClick={toggleSelectionMode}
@@ -218,8 +219,8 @@ const Inbox = () => {
                 선택
               </button>
             ) : (
-                // ... selection controls ...
-                <div className={styles.selectionControls}>
+              // ... selection controls ...
+              <div className={styles.selectionControls}>
                 <div
                   className={styles.selectAllContainer}
                   onClick={handleSelectAll}
@@ -263,8 +264,8 @@ const Inbox = () => {
         {/* Sidebar ... */}
         {user && (
           <aside className={styles.sidebarArea}>
-             {/* ... */}
-             <div className={styles.subscribedSection}>
+            {/* ... */}
+            <div className={styles.subscribedSection}>
               <div className={styles.sidebarHeader}>
                 <h3 className={styles.sectionTitle}>✨ 구독 게시판</h3>
                 <button
@@ -320,7 +321,7 @@ const Inbox = () => {
                   style={{ position: 'relative' }}
                 >
                   {isSelectionMode && (
-                     <div
+                    <div
                       className={styles.checkboxArea}
                       onClick={(e) => handleSelect(e, article.id)}
                     >
@@ -328,7 +329,7 @@ const Inbox = () => {
                         type="checkbox"
                         checked={selectedIds.has(article.id)}
                         readOnly
-                        style={{ pointerEvents: 'none' }} 
+                        style={{ pointerEvents: 'none' }}
                       />
                     </div>
                   )}
@@ -343,7 +344,9 @@ const Inbox = () => {
                     </div>
                     <div className={styles.itemTitle}>{article.title}</div>
                     <div className={styles.itemFooter}>
-                      <span className={styles.itemSender}>{article.author}</span>
+                      <span className={styles.itemSender}>
+                        {article.author}
+                      </span>
                       <span className={styles.divider}>|</span>
                       <span className={styles.itemDate}>
                         {new Date(article.publishedAt).toLocaleString()}
@@ -367,22 +370,25 @@ const Inbox = () => {
                 : '선택된 게시판의 메시지가 없습니다.'}
             </p>
           )}
-          
+
           {/* Pagination Controls */}
           {/* Show even if empty list if user requested "show 1 when no messages" */}
           <div className={styles.pagination}>
-            <button 
-              className={styles.pageBtn} 
+            <button
+              className={styles.pageBtn}
               onClick={handlePrevPage}
               disabled={pageIndex === 0}
             >
               &lt; Prev
             </button>
             <span className={styles.pageNumber}>Page {pageIndex + 1}</span>
-            <button 
-              className={styles.pageBtn} 
+            <button
+              className={styles.pageBtn}
               onClick={handleNextPage}
-              disabled={(!hasNextPage && pageIndex === (data?.pages.length || 0) - 1) || isFetchingNextPage}
+              disabled={
+                (!hasNextPage && pageIndex === (data?.pages.length || 0) - 1) ||
+                isFetchingNextPage
+              }
             >
               Next &gt;
             </button>

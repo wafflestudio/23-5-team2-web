@@ -1,16 +1,26 @@
-import type { ArticleListResponse } from '../types/article';
+import type {
+  Article,
+  ArticleListResponse,
+  ArticlePaging,
+} from '../types/article';
 import { api } from './instance';
 
 // Adapted to handle potential backend variations (inboxes vs data)
+type RawInboxResponse = {
+  data?: Article[];
+  inboxes?: Article[];
+  paging?: ArticlePaging;
+};
+
 export const getInboxes = async (params?: {
   limit?: number;
   nextPublishedAt?: number;
   nextId?: number;
 }): Promise<ArticleListResponse> => {
-  const response = await api.get<any>('/v1/inboxes', {
+  const response = await api.get<RawInboxResponse>('/v1/inboxes', {
     params,
   });
-  
+
   // Fallback if backend hasn't updated to match ArticleListResponse
   const data = response.data.data || response.data.inboxes || [];
   const paging = response.data.paging || {
