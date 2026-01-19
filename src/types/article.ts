@@ -14,7 +14,7 @@ export interface Article {
   isRead: boolean;
 }
 
-interface ArticlePaging {
+export interface ArticlePaging {
   nextPublishedAt: number;
   nextId: number;
   hasNext: boolean;
