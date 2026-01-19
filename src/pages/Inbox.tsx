@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getInboxes, deleteInbox, readInbox } from '../apis/inboxApi';
 import {
   getBoards,
   getMySubscriptions,
   unsubscribeBoard,
 } from '../apis/boardApi';
+import { deleteInbox, getInboxes, readInbox } from '../apis/inboxApi';
 import { useUserStore } from '../store/useUserStore';
 
 import styles from './Inbox.module.css';
@@ -122,9 +122,9 @@ const Inbox = () => {
 
   const handleSelectAll = () => {
     if (selectedIds.size === filteredMessages.length) {
-       setSelectedIds(new Set());
+      setSelectedIds(new Set());
     } else {
-       setSelectedIds(new Set(filteredMessages.map((msg) => msg.id)));
+      setSelectedIds(new Set(filteredMessages.map((msg) => msg.id)));
     }
   };
 
@@ -132,13 +132,11 @@ const Inbox = () => {
     if (selectedIds.size === 0) return;
     if (window.confirm(`${selectedIds.size}개의 메시지를 삭제하시겠습니까?`)) {
       try {
-        await Promise.all(
-          Array.from(selectedIds).map((id) => deleteInbox(id))
-        );
+        await Promise.all(Array.from(selectedIds).map((id) => deleteInbox(id)));
         queryClient.invalidateQueries({ queryKey: ['inbox'] });
         setSelectedIds(new Set());
         // Optional: Exit selection mode after delete? User might want to delete more. Keeping it for now.
-        setIsSelectionMode(false); 
+        setIsSelectionMode(false);
         alert('삭제되었습니다.');
       } catch (e) {
         console.error('Bulk delete failed', e);
@@ -172,7 +170,7 @@ const Inbox = () => {
         {filteredMessages.length > 0 && (
           <div className={styles.bulkActions}>
             {!isSelectionMode ? (
-              <button 
+              <button
                 className={styles.selectModeBtn}
                 onClick={toggleSelectionMode}
               >
@@ -180,8 +178,8 @@ const Inbox = () => {
               </button>
             ) : (
               <div className={styles.selectionControls}>
-                <div 
-                  className={styles.selectAllContainer} 
+                <div
+                  className={styles.selectAllContainer}
                   onClick={handleSelectAll}
                 >
                   <label className={styles.selectAllLabel}>
@@ -196,7 +194,7 @@ const Inbox = () => {
                     전체 선택
                   </label>
                 </div>
-                
+
                 <div className={styles.actionButtons}>
                   {selectedIds.size > 0 && (
                     <button
@@ -206,7 +204,7 @@ const Inbox = () => {
                       삭제 ({selectedIds.size})
                     </button>
                   )}
-                  <button 
+                  <button
                     className={styles.cancelSelectionBtn}
                     onClick={toggleSelectionMode}
                   >
@@ -272,14 +270,18 @@ const Inbox = () => {
         <div className={styles.notificationList}>
           {filteredMessages.length > 0 ? (
             filteredMessages.map((article) => (
-              <div key={article.id} className={styles.itemWrapper} style={{ position: 'relative' }}>
+              <div
+                key={article.id}
+                className={styles.itemWrapper}
+                style={{ position: 'relative' }}
+              >
                 {isSelectionMode && (
-                  <div 
+                  <div
                     className={styles.checkboxArea}
                     onClick={(e) => handleSelect(e, article.id)}
                   >
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={selectedIds.has(article.id)}
                       readOnly
                       style={{ pointerEvents: 'none' }} // Prevent double events
@@ -304,7 +306,7 @@ const Inbox = () => {
                     </span>
                   </div>
                 </Link>
-                <button 
+                <button
                   className={styles.deleteButton}
                   onClick={(e) => handleDelete(e, article.id)}
                   title="삭제"

@@ -1,5 +1,5 @@
-import { api } from './instance';
 import type { Article } from '../types/article';
+import { api } from './instance';
 
 interface GetInboxesResponse {
   inboxes: Article[];
