@@ -365,42 +365,46 @@ const HomePage = () => {
                         </span>
                       );
                     })()}
-                  <span
-                    className={`${styles.bookmarkTag} ${
-                      bookmarkedIds.has(article.id) ? styles.bookmarkActive : ''
-                    }`}
-                    onClick={(e) => handleBookmarkToggle(e, article.id)}
-                    role="button"
-                    title={
-                      bookmarkedIds.has(article.id) ? '북마크 해제' : '북마크'
-                    }
-                  >
-                    {bookmarkedIds.has(article.id) ? (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
-                      </svg>
-                    ) : (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
-                      </svg>
-                    )}
-                  </span>
+                  {user && (
+                    <span
+                      className={`${styles.bookmarkTag} ${
+                        bookmarkedIds.has(article.id)
+                          ? styles.bookmarkActive
+                          : ''
+                      }`}
+                      onClick={(e) => handleBookmarkToggle(e, article.id)}
+                      role="button"
+                      title={
+                        bookmarkedIds.has(article.id) ? '북마크 해제' : '북마크'
+                      }
+                    >
+                      {bookmarkedIds.has(article.id) ? (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
+                        </svg>
+                      )}
+                    </span>
+                  )}
                 </div>
                 <div className={styles.articleTitle}>{article.title}</div>
                 <div className={styles.articleMeta}>

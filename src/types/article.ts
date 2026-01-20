@@ -16,7 +16,7 @@ export interface Article {
   isInbox?: boolean; // For differentiating Feed vs Inbox items
 }
 
-export interface ArticlePaging {
+interface ArticlePaging {
   nextPublishedAt: number;
   nextId: number;
   hasNext: boolean;

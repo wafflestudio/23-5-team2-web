@@ -15,17 +15,13 @@ export interface Subscription {
   boardId: number;
 }
 
-// Any needed to handle potential response structure variations until confirmed
+interface GetSubscriptionsResponse {
+  subscriptions: Subscription[];
+}
+
 export const getMySubscriptions = async (): Promise<Subscription[]> => {
-  const response = await api.get('/v1/subscriptions');
-
-  if (Array.isArray(response.data)) {
-    return response.data;
-  } else if (response.data && Array.isArray(response.data.subscriptions)) {
-    return response.data.subscriptions;
-  }
-
-  return [];
+  const response = await api.get<GetSubscriptionsResponse>('/v1/subscriptions');
+  return response.data.subscriptions;
 };
 
 export const subscribeBoard = async (

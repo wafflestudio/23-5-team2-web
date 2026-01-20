@@ -1,54 +1,29 @@
 import type { Article } from '../types/article';
 import { api } from './instance';
 
-// Helper type for dynamic response handling
-type BookmarkItem =
-  | {
-      article: Article;
-      id: number; // bookmarkId
-      createdAt: string;
-    }
-  | Article;
+// Strict type for Bookmark response
+interface BookmarkItem {
+  id: number; // bookmarkId
+  article: Article;
+  createdAt: string;
+}
 
-type BookmarkResponse =
-  | BookmarkItem[]
-  | { bookmarks: BookmarkItem[] }
-  | { data: BookmarkItem[] };
+interface BookmarkResponse {
+  bookmarks: BookmarkItem[];
+}
 
 export const getBookmarks = async (): Promise<
   (Article & { bookmarkId: number })[]
 > => {
   const response = await api.get<BookmarkResponse>('/v1/bookmarks');
+  const items = response.data.bookmarks;
 
-  let rawData: BookmarkItem[] = [];
-
-  const data = response.data;
-  if (Array.isArray(data)) {
-    rawData = data;
-  } else if ('bookmarks' in data && Array.isArray(data.bookmarks)) {
-    rawData = data.bookmarks;
-  } else if ('data' in data && Array.isArray(data.data)) {
-    rawData = data.data;
-  }
-
-  // Transform: if item has 'article' property, extract it and Attach bookmarkId
-  return rawData.map((item) => {
-    if ('article' in item && item.article && typeof item.article === 'object') {
-      return {
-        ...item.article,
-        bookmarkId: item.id, // Capture the bookmark ID
-      };
-    }
-    // Fallback: if it's already flat, maybe id is bookmark ID? or Article ID?
-    // It's ambiguous. But based on current findings, it's nested.
-    // If item is already an Article, we need to ensure it has a bookmarkId.
-    // Assuming if it's flat, its 'id' property might be the bookmarkId or it's an Article ID.
-    // For consistency, we'll try to assign an 'id' property as bookmarkId if it exists.
+  return items.map((item) => {
     return {
-      ...(item as Article),
-      bookmarkId: (item as Article).id, // Best guess for bookmarkId if not nested
+      ...item.article,
+      bookmarkId: item.id,
     };
-  }) as (Article & { bookmarkId: number })[];
+  });
 };
 
 export const addBookmark = async (articleId: number): Promise<void> => {

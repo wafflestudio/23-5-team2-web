@@ -12,6 +12,7 @@ import {
 import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
 import { useUserStore } from '../store/useUserStore';
 import styles from './ArticleDetailPage.module.css';
+import NotFoundPage from './NotFoundPage';
 
 const ArticleDetailPage = () => {
   const { articleId } = useParams<{ articleId: string }>();
@@ -137,17 +138,9 @@ const ArticleDetailPage = () => {
   }
 
   if (isError) {
-    // Check if it's a 404
-    // @ts-ignore - axios error handling usually needs more type guarding, simplifying for now
+    // @ts-ignore
     if (error?.response?.status === 404) {
-      return (
-        <div className={styles.notFound}>
-          <h2>게시글을 찾을 수 없습니다.</h2>
-          <button className={styles.backButton} onClick={() => navigate(-1)}>
-            뒤로 가기
-          </button>
-        </div>
-      );
+      return <NotFoundPage />;
     }
     return <div className={styles.error}>에러가 발생했습니다.</div>;
   }
