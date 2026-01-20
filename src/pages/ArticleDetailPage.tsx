@@ -1,7 +1,6 @@
-// pages/ArticleDetailPage.tsx
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getArticleDetail } from '../apis/articleApi';
 import {
   type Subscription,
@@ -10,6 +9,7 @@ import {
   unsubscribeBoard,
 } from '../apis/boardApi';
 import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
+import { deleteInbox } from '../apis/inboxApi';
 import { useUserStore } from '../store/useUserStore';
 import styles from './ArticleDetailPage.module.css';
 import NotFoundPage from './NotFoundPage';
@@ -17,8 +17,15 @@ import NotFoundPage from './NotFoundPage';
 const ArticleDetailPage = () => {
   const { articleId } = useParams<{ articleId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { user } = useUserStore();
+
+  const { isMock, isInbox } =
+    (location.state as {
+      isMock?: boolean;
+      isInbox?: boolean;
+    }) || {};
 
   const {
     data: article,
@@ -38,6 +45,8 @@ const ArticleDetailPage = () => {
     queryFn: getMySubscriptions,
     enabled: !!user,
   });
+
+  // ... (subscribeMutation, unsubscribeMutation, bookmark logic omitted for brevity, keeping existing)
 
   const subscribeMutation = useMutation({
     mutationFn: subscribeBoard,
@@ -129,6 +138,46 @@ const ArticleDetailPage = () => {
     } else {
       if (window.confirm('이 글을 북마크하시겠습니까?')) {
         addBookmarkMutation.mutate(id);
+      }
+    }
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteInbox(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inbox'] });
+      alert('삭제되었습니다.');
+      navigate(-1);
+    },
+    onError: (error) => {
+      console.error('Failed to delete message', error);
+      alert('메시지 삭제에 실패했습니다.');
+    },
+  });
+
+  const handleDelete = () => {
+    if (!article) return;
+
+    if (window.confirm('정말 삭제하시겠습니까?')) {
+      if (isMock) {
+        // Mock Delete Logic
+        try {
+          const saved = sessionStorage.getItem('inbox_mock_deleted');
+          const mockDeletedIds = saved ? new Set(JSON.parse(saved)) : new Set();
+          mockDeletedIds.add(article.id);
+          sessionStorage.setItem(
+            'inbox_mock_deleted',
+            JSON.stringify(Array.from(mockDeletedIds))
+          );
+          alert('삭제되었습니다. (Design Review Mode)');
+          navigate(-1);
+        } catch (e) {
+          console.error('Mock delete failed', e);
+          alert('가상 삭제 중 오류가 발생했습니다.');
+        }
+      } else {
+        // Real Delete Logic
+        deleteMutation.mutate(article.id);
       }
     }
   };
@@ -225,6 +274,31 @@ const ArticleDetailPage = () => {
                       </svg>
                     )}
                   </span>
+                  {/* Delete Icon (Trash) - Only show if it is an inbox item (real or mock) */}
+                  {(isInbox !== false || isMock) && (
+                    <span
+                      className={styles.bookmarkTag} // Reuse bookmark tag styles for consistency
+                      onClick={handleDelete}
+                      role="button"
+                      title="삭제"
+                      style={{ color: '#ccc' }} // Default color, hover handled by class or inline if needed
+                    >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                    </span>
+                  )}
                 </div>
               );
             })()}

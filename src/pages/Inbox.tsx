@@ -6,8 +6,8 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { getArticles } from '../apis/articleApi';
 import {
   getBoards,
@@ -61,10 +61,31 @@ const Inbox = () => {
 
       if (inboxData?.pages) {
         for (const page of inboxData.pages) {
+          if (!page?.data) continue;
           const found = page.data.find((msg) => msg.id === newBookmarkId);
           if (found) {
             articleToAdd = found;
             break;
+          }
+        }
+      }
+
+      // If not found in Inbox, check History (Mock) cache
+      if (!articleToAdd) {
+        // Reconstruct the key logic used in useQuery, or search broadly
+        // Since we can't easily replicate dynamic keys inside onMutate without props,
+        // we'll try to find any 'inbox-history' query.
+        const historyQueries = queryClient.getQueriesData<ArticleListResponse>({
+          queryKey: ['inbox-history'],
+        });
+
+        for (const [_, data] of historyQueries) {
+          if (data?.data) {
+            const found = data.data.find((msg) => msg.id === newBookmarkId);
+            if (found) {
+              articleToAdd = found;
+              break;
+            }
           }
         }
       }
@@ -132,16 +153,12 @@ const Inbox = () => {
       // Find the bookmarkId corresponding to this articleId
       const bookmark = bookmarkedArticles.find((b) => b.id === id);
       if (bookmark && bookmark.bookmarkId) {
-        if (window.confirm('북마크를 해제하시겠습니까?')) {
-          removeBookmarkMutation.mutate(bookmark.bookmarkId);
-        }
+        removeBookmarkMutation.mutate(bookmark.bookmarkId);
       } else {
         alert('북마크 정보를 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
       }
     } else {
-      if (window.confirm('이 글을 북마크하시겠습니까?')) {
-        addBookmarkMutation.mutate(id);
-      }
+      addBookmarkMutation.mutate(id);
     }
   };
   const [inactiveBoardIds, setInactiveBoardIds] = useState<Set<number>>(
@@ -202,61 +219,81 @@ const Inbox = () => {
   // Calculate Subscribed Board IDs
   const subscribedBoardIds = subscriptions.map((s) => s.boardId);
 
-  // 2. Fetch Backfill Articles (Feed) for Subscribed Boards
-  const { data: feedData } = useInfiniteQuery<
-    ArticleListResponse,
-    Error,
-    InfiniteData<ArticleListResponse>,
-    (string | number | undefined)[],
-    { limit: number; nextPublishedAt?: number; nextId?: number }
-  >({
-    queryKey: ['inbox-feed', user?.id, subscribedBoardIds.join(',')],
-    queryFn: ({ pageParam }) =>
+  // 2. Fetch 10 Recent Articles (History) for Design Review
+  const { data: historyData } = useQuery({
+    queryKey: ['inbox-history', user?.id, subscribedBoardIds.join(',')],
+    queryFn: () =>
       getArticles({
         boardids:
           subscribedBoardIds.length > 0
             ? subscribedBoardIds.join(',')
             : undefined,
-        limit: 15,
-        nextPublishedAt: pageParam?.nextPublishedAt,
-        nextId: pageParam?.nextId,
+        limit: 10,
       }),
-    initialPageParam: { limit: 15 },
-    getNextPageParam: (lastPage) => {
-      if (!lastPage.paging?.hasNext) return undefined;
-      return {
-        nextPublishedAt: lastPage.paging.nextPublishedAt,
-        nextId: lastPage.paging.nextId,
-        limit: 15,
-      };
-    },
-    enabled: !!user && subscribedBoardIds.length > 0,
+    enabled: !!user,
   });
 
   // Pagination State
   const [pageIndex, setPageIndex] = useState(0);
 
-  const inboxPageData = data?.pages[pageIndex]?.data || [];
-  const feedPageData = feedData?.pages[pageIndex]?.data || [];
-
-  // MERGE LOGIC: Combine Inbox (Notifications) and Feed (Content)
-  // Deduplicate by ID
-  const combinedMessagesMap = new Map();
-
-  // Inbox items (Real notifications)
-  inboxPageData.forEach((item) =>
-    combinedMessagesMap.set(item.id, { ...item, isInbox: true })
-  );
-
-  // Feed items (Backfill content)
-  feedPageData.forEach((item) => {
-    if (!combinedMessagesMap.has(item.id)) {
-      combinedMessagesMap.set(item.id, { ...item, isInbox: false });
+  // Interaction State for Mock Items (History) - Persisted in SessionStorage
+  const [mockReadIds, setMockReadIds] = useState<Set<number>>(() => {
+    try {
+      const saved = sessionStorage.getItem('inbox_mock_read');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+  const [mockDeletedIds, setMockDeletedIds] = useState<Set<number>>(() => {
+    try {
+      const saved = sessionStorage.getItem('inbox_mock_deleted');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
     }
   });
 
+  // Sync Mock State to SessionStorage
+  useEffect(() => {
+    sessionStorage.setItem(
+      'inbox_mock_read',
+      JSON.stringify(Array.from(mockReadIds))
+    );
+  }, [mockReadIds]);
+
+  useEffect(() => {
+    sessionStorage.setItem(
+      'inbox_mock_deleted',
+      JSON.stringify(Array.from(mockDeletedIds))
+    );
+  }, [mockDeletedIds]);
+
+  // Merge Logic
+  const inboxPageData =
+    (data?.pages?.[pageIndex]?.data || []).map((item) => ({
+      ...item,
+      isInbox: true,
+    })) || [];
+
+  const historyPageData = (historyData?.data || [])
+    .filter((item) => !mockDeletedIds.has(item.id))
+    .map((item) => ({
+      ...item,
+      isInbox: true, // Visualize as Inbox
+      isRead: mockReadIds.has(item.id), // Visualize Read status based on local state
+      isMock: true, // Flag as mock item
+    }));
+
+  // Combine: Inbox first, then History (deduplicated)
+  const combinedMap = new Map();
+  // Add history first
+  historyPageData.forEach((item) => combinedMap.set(item.id, item));
+  // Add inbox (overwrites history if duplicate exists, ensuring isInbox: true permissions)
+  inboxPageData.forEach((item) => combinedMap.set(item.id, item));
+
   // Convert to array and sort by publishedAt desc
-  const inboxMessages = Array.from(combinedMessagesMap.values()).sort(
+  const inboxMessages = Array.from(combinedMap.values()).sort(
     (a, b) =>
       new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
   );
@@ -264,7 +301,7 @@ const Inbox = () => {
   const handleNextPage = () => {
     if (
       pageIndex < (data?.pages.length || 0) - 1 ||
-      pageIndex < (feedData?.pages.length || 0) - 1
+      pageIndex < ((historyData?.data || []).length > 0 ? 0 : -1)
     ) {
       setPageIndex(pageIndex + 1);
     } else if (hasNextPage) {
@@ -325,11 +362,20 @@ const Inbox = () => {
     },
   });
 
-  const handleDelete = (e: React.MouseEvent, id: number) => {
+  const handleDelete = (e: React.MouseEvent, id: number, isMock?: boolean) => {
     e.preventDefault(); // Prevent Link navigation
     e.stopPropagation();
     if (window.confirm('정말 삭제하시겠습니까?')) {
-      deleteMutation.mutate(id);
+      if (isMock) {
+        setMockDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.add(id);
+          return next;
+        });
+        alert('삭제되었습니다. (Design Review Mode)');
+      } else {
+        deleteMutation.mutate(id);
+      }
     }
   };
 
@@ -367,12 +413,41 @@ const Inbox = () => {
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
+
+    // Separate Mock vs Real items
+    const selectedMessages = filteredMessages.filter((m) =>
+      selectedIds.has(m.id)
+    );
+    const mockIdsToDelete = selectedMessages
+      .filter((m) => (m as Article & { isMock?: boolean }).isMock)
+      .map((m) => m.id);
+    const realIdsToDelete = selectedMessages
+      .filter((m) => m.isInbox && !(m as Article & { isMock?: boolean }).isMock)
+      .map((m) => m.id);
+
+    if (mockIdsToDelete.length === 0 && realIdsToDelete.length === 0) {
+      alert('삭제할 수 있는 메시지가 선택되지 않았습니다.');
+      return;
+    }
+
     if (window.confirm(`${selectedIds.size}개의 메시지를 삭제하시겠습니까?`)) {
       try {
-        await Promise.all(Array.from(selectedIds).map((id) => deleteInbox(id)));
-        queryClient.invalidateQueries({ queryKey: ['inbox'] });
+        // 1. Handle Real Deletes
+        if (realIdsToDelete.length > 0) {
+          await Promise.all(realIdsToDelete.map((id) => deleteInbox(id)));
+          queryClient.invalidateQueries({ queryKey: ['inbox'] });
+        }
+
+        // 2. Handle Mock Deletes
+        if (mockIdsToDelete.length > 0) {
+          setMockDeletedIds((prev) => {
+            const next = new Set(prev);
+            mockIdsToDelete.forEach((id) => next.add(id));
+            return next;
+          });
+        }
+
         setSelectedIds(new Set());
-        // Optional: Exit selection mode after delete? User might want to delete more. Keeping it for now.
         setIsSelectionMode(false);
         alert('삭제되었습니다.');
       } catch (e) {
@@ -394,9 +469,43 @@ const Inbox = () => {
     },
   });
 
-  const handleRead = (id: number) => {
-    if (isSelectionMode) return; // Prevent reading in selection mode if clicked (though wrapper handles it)
-    readMutation.mutate(id);
+  const navigate = useNavigate();
+
+  const handleRead = (
+    e: React.MouseEvent,
+    article: Article & { isInbox?: boolean; isMock?: boolean }
+  ) => {
+    // Prevent default link navigation to handle logic first
+    e.preventDefault();
+    if (isSelectionMode) return;
+
+    // Handle Mock Read
+    if (article.isMock) {
+      if (!article.isRead) {
+        setMockReadIds((prev) => {
+          const next = new Set(prev);
+          next.add(article.id);
+          // Sync immediately to session storage to ensure persistence across navigation
+          sessionStorage.setItem(
+            'inbox_mock_read',
+            JSON.stringify(Array.from(next))
+          );
+          return next;
+        });
+      }
+    }
+    // Only mark as read if it's an Inbox item and currently unread
+    else if (article.isInbox && !article.isRead) {
+      readMutation.mutate(article.id);
+    }
+
+    // Navigate programmatically passing the state
+    navigate(`/article/${article.id}`, {
+      state: {
+        isMock: article.isMock,
+        isInbox: article.isInbox,
+      },
+    });
   };
 
   // ...
@@ -541,13 +650,18 @@ const Inbox = () => {
                   )}
                   <Link
                     to={`/article/${article.id}`}
+                    state={{
+                      isMock: (article as Article & { isMock?: boolean })
+                        .isMock,
+                      isInbox: article.isInbox,
+                    }}
                     className={`${styles.notificationItem} ${!article.isRead ? styles.unread : ''}`}
                     style={{
                       textDecoration: 'none',
                       display: 'block',
                       paddingRight: '48px',
                     }}
-                    onClick={() => handleRead(article.id)}
+                    onClick={(e) => handleRead(e, article)}
                   >
                     <div className={styles.headerRow}>
                       <div className={styles.itemCategory}>
@@ -615,6 +729,36 @@ const Inbox = () => {
                           </svg>
                         )}
                       </span>
+                      {/* Delete Icon (Trash) - Only for Inbox items */}
+                      {article.isInbox !== false && (
+                        <span
+                          className={styles.deleteTag}
+                          onClick={(e) =>
+                            handleDelete(
+                              e,
+                              article.id,
+                              (article as Article & { isMock?: boolean }).isMock
+                            )
+                          }
+                          role="button"
+                          title="삭제"
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2" />
+                          </svg>
+                        </span>
+                      )}
                     </div>
                     <div className={styles.itemTitle}>{article.title}</div>
                     <div className={styles.itemFooter}>
@@ -627,16 +771,6 @@ const Inbox = () => {
                       </span>
                     </div>
                   </Link>
-                  {/* Only show delete button for actual Inbox items, not Feed items */}
-                  {article.isInbox !== false && (
-                    <button
-                      className={styles.deleteButton}
-                      onClick={(e) => handleDelete(e, article.id)}
-                      title="삭제"
-                    >
-                      🗑️
-                    </button>
-                  )}
                 </div>
               ))}
             </>
