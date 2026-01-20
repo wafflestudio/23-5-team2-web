@@ -2,8 +2,32 @@ import type {
   Article,
   ArticleFilterParams,
   ArticleListResponse,
+  CreateArticleRequest,
 } from '../types/article';
 import { api } from './instance';
+
+export const createArticle = async (
+  data: CreateArticleRequest
+): Promise<Article> => {
+  // Hardcoding boardId to 1 as backend likely requires it
+  const response = await api.post<Article>('/v1/articles', {
+    ...data,
+    boardId: 1,
+  });
+  return response.data;
+};
+
+export const updateArticle = async (
+  articleId: number,
+  data: Partial<CreateArticleRequest>
+): Promise<Article> => {
+  const response = await api.patch<Article>(`/v1/articles/${articleId}`, data);
+  return response.data;
+};
+
+export const deleteArticle = async (articleId: number): Promise<void> => {
+  await api.delete(`/v1/articles/${articleId}`);
+};
 
 export const getArticles = async (
   params: ArticleFilterParams

@@ -1,10 +1,13 @@
 // App.tsx
+
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import './style.css';
+import { NuqsAdapter } from 'nuqs/adapters/react';
 import { useEffect } from 'react';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import ArticleDetailPage from './pages/ArticleDetailPage';
+import CreateArticlePage from './pages/CreateArticlePage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import MyPage from './pages/MyPage';
@@ -22,17 +25,21 @@ const App = () => {
 
   return (
     <Router>
-      <Header />
-      <main>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/article/:articleId" element={<ArticleDetailPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/mypage" element={<MyPage />} />
-        </Routes>
-      </main>
-      <Footer />
+      <NuqsAdapter>
+        <Header />
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/create" element={<CreateArticlePage />} />
+            <Route path="/edit/:articleId" element={<CreateArticlePage />} />
+            <Route path="/article/:articleId" element={<ArticleDetailPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/mypage" element={<MyPage />} />
+          </Routes>
+        </main>
+        <Footer />
+      </NuqsAdapter>
     </Router>
   );
 };

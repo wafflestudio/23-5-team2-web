@@ -25,9 +25,16 @@ export interface ArticleListResponse {
 }
 
 export interface ArticleFilterParams {
-  boardids?: string; // comma-separated IDs
+  boardIds?: string; // comma-separated IDs
   keyword?: string;
   nextPublishedAt?: number;
   nextId?: number;
   limit?: number;
+}
+export interface CreateArticleRequest {
+  title: string;
+  content: string;
+  author: string;
+  originLink: string | null;
+  publishedAt: string; // ISO8601
 }
