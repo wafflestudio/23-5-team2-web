@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 // pages/ArticleDetailPage.tsx
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getArticleDetail } from '../apis/articleApi';
@@ -9,6 +9,7 @@ import {
   subscribeBoard,
   unsubscribeBoard,
 } from '../apis/boardApi';
+import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
 import { useUserStore } from '../store/useUserStore';
 import styles from './ArticleDetailPage.module.css';
 
@@ -76,6 +77,61 @@ const ArticleDetailPage = () => {
     },
   });
 
+  // Bookmark Logic
+  const { data: bookmarkedArticles = [] } = useQuery({
+    queryKey: ['bookmarks'],
+    queryFn: getBookmarks,
+    enabled: !!user,
+  });
+
+  const bookmarkedIds = new Set(bookmarkedArticles.map((b) => b.id));
+
+  const addBookmarkMutation = useMutation({
+    mutationFn: (id: number) => addBookmark(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+      queryClient.invalidateQueries({ queryKey: ['inbox'] });
+    },
+    onError: (e: AxiosError<{ message: string }>) => {
+      console.error('Failed to bookmark', e);
+      alert(
+        `북마크 추가에 실패했습니다: ${e.response?.data?.message || e.message}`
+      );
+    },
+  });
+
+  const removeBookmarkMutation = useMutation({
+    mutationFn: (bookmarkId: number) => removeBookmark(bookmarkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+      queryClient.invalidateQueries({ queryKey: ['inbox'] });
+    },
+    onError: (e: AxiosError<{ message: string }>) => {
+      console.error('Failed to remove bookmark', e);
+      alert(
+        `북마크 해제에 실패했습니다: ${e.response?.data?.message || e.message}`
+      );
+    },
+  });
+
+  const handleBookmarkToggle = (e: React.MouseEvent, id: number) => {
+    e.preventDefault();
+    if (bookmarkedIds.has(id)) {
+      const bookmark = bookmarkedArticles.find((b) => b.id === id);
+      if (bookmark && bookmark.bookmarkId) {
+        if (window.confirm('북마크를 해제하시겠습니까?')) {
+          removeBookmarkMutation.mutate(bookmark.bookmarkId);
+        }
+      } else {
+        alert('북마크 정보를 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
+      }
+    } else {
+      if (window.confirm('이 글을 북마크하시겠습니까?')) {
+        addBookmarkMutation.mutate(id);
+      }
+    }
+  };
+
   if (isLoading) {
     return <div className={styles.loading}>로딩 중...</div>;
   }
@@ -115,26 +171,68 @@ const ArticleDetailPage = () => {
               const isSubscribed = !!subscription;
 
               return (
-                <button
-                  className={`${styles.subscribeButton} ${
-                    isSubscribed ? styles.subscribed : ''
-                  }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-
-                    if (isSubscribed) {
-                      if (window.confirm('구독을 취소하시겠습니까?')) {
-                        unsubscribeMutation.mutate(subscription.id);
-                      }
-                    } else {
-                      if (window.confirm('이 게시판을 구독하시겠습니까?')) {
-                        subscribeMutation.mutate(article.board.id);
-                      }
-                    }
-                  }}
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
-                  {isSubscribed ? '✔ 구독중' : '구독'}
-                </button>
+                  <button
+                    className={`${styles.subscribeButton} ${
+                      isSubscribed ? styles.subscribed : ''
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+
+                      if (isSubscribed) {
+                        if (window.confirm('구독을 취소하시겠습니까?')) {
+                          unsubscribeMutation.mutate(subscription.id);
+                        }
+                      } else {
+                        if (window.confirm('이 게시판을 구독하시겠습니까?')) {
+                          subscribeMutation.mutate(article!.board.id);
+                        }
+                      }
+                    }}
+                  >
+                    {isSubscribed ? '✔ 구독중' : '구독'}
+                  </button>
+                  <span
+                    className={`${styles.bookmarkTag} ${
+                      bookmarkedIds.has(article!.id)
+                        ? styles.bookmarkActive
+                        : ''
+                    }`}
+                    onClick={(e) => handleBookmarkToggle(e, article!.id)}
+                    role="button"
+                    title={
+                      bookmarkedIds.has(article!.id) ? '북마크 해제' : '북마크'
+                    }
+                  >
+                    {bookmarkedIds.has(article!.id) ? (
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
+                      </svg>
+                    ) : (
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
+                      </svg>
+                    )}
+                  </span>
+                </div>
               );
             })()}
         </div>

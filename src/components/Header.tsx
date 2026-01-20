@@ -40,6 +40,10 @@ const Header = () => {
               Inbox
             </Link>
 
+            <Link to="/bookmark" style={S.textLink}>
+              북마크
+            </Link>
+
             {/* 마이페이지 버튼 */}
             <Link to="/mypage" style={S.textLink}>
               마이페이지

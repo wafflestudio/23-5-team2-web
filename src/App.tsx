@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import ArticleDetailPage from './pages/ArticleDetailPage';
+import BookmarkPage from './pages/BookmarkPage';
 import HomePage from './pages/HomePage';
 import Inbox from './pages/Inbox';
 import LoginPage from './pages/LoginPage';
@@ -32,6 +33,7 @@ const App = () => {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/inbox" element={<Inbox />} />
+          <Route path="/bookmark" element={<BookmarkPage />} />
         </Routes>
       </main>
       <Footer />

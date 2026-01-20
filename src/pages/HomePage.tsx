@@ -1,4 +1,5 @@
 import {
+  type InfiniteData,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -17,7 +18,9 @@ import {
   subscribeBoard,
   unsubscribeBoard,
 } from '../apis/boardApi';
+import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
 import { useUserStore } from '../store/useUserStore';
+import type { Article, ArticleListResponse } from '../types/article';
 import styles from './HomePage.module.css';
 
 const HomePage = () => {
@@ -148,6 +151,124 @@ const HomePage = () => {
     },
   });
 
+  // 4. Bookmark Logic
+  const { data: bookmarkedArticles = [] } = useQuery({
+    queryKey: ['bookmarks'],
+    queryFn: getBookmarks,
+    enabled: !!user,
+  });
+
+  const bookmarkedIds = new Set(bookmarkedArticles.map((b) => b.id));
+
+  const addBookmarkMutation = useMutation({
+    mutationFn: (id: number) => {
+      return addBookmark(id);
+    },
+    onMutate: async (newBookmarkId) => {
+      await queryClient.cancelQueries({ queryKey: ['bookmarks'] });
+      const previousBookmarks =
+        queryClient.getQueryData<Article[]>(['bookmarks']) || [];
+
+      // Find the full article object from the feed cache to avoid ghost articles
+      let articleToAdd: Article | undefined;
+      const feedData = queryClient.getQueryData<
+        InfiniteData<ArticleListResponse>
+      >(['articles', keyword, selectedBoardIds]);
+
+      if (feedData?.pages) {
+        for (const page of feedData.pages) {
+          const found = page.data.find((a) => a.id === newBookmarkId);
+          if (found) {
+            articleToAdd = found;
+            break;
+          }
+        }
+      }
+
+      if (articleToAdd) {
+        queryClient.setQueryData(['bookmarks'], (old: Article[] = []) => [
+          ...old,
+          articleToAdd!,
+        ]);
+      } else {
+        // Fallback: If we can't find it (rare), still better to not show a broken one or maybe fetch it?
+        // for now, we won't optimistically update if we can't find the data, to avoid the 'white box' issue.
+        console.warn(
+          'Could not find article details for optimistic bookmark update'
+        );
+      }
+
+      return { previousBookmarks };
+    },
+    onError: (e: AxiosError<{ message: string }>, _, context) => {
+      console.error('Failed to bookmark', e);
+      alert(
+        `북마크 추가에 실패했습니다: ${e.response?.data?.message || e.message}`
+      );
+      if (context?.previousBookmarks) {
+        queryClient.setQueryData(['bookmarks'], context.previousBookmarks);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+      queryClient.invalidateQueries({ queryKey: ['inbox'] });
+    },
+  });
+
+  const removeBookmarkMutation = useMutation({
+    mutationFn: (bookmarkId: number) => {
+      return removeBookmark(bookmarkId);
+    },
+    onMutate: async (bookmarkIdToRemove) => {
+      await queryClient.cancelQueries({ queryKey: ['bookmarks'] });
+      const previousBookmarks =
+        queryClient.getQueryData<Article[]>(['bookmarks']) || [];
+
+      queryClient.setQueryData(['bookmarks'], (old: Article[] = []) =>
+        old.filter((b) => b.bookmarkId !== bookmarkIdToRemove)
+      );
+
+      return { previousBookmarks };
+    },
+    onError: (e: AxiosError<{ message: string }>, _, context) => {
+      console.error('Failed to remove bookmark', e);
+      alert(
+        `북마크 해제에 실패했습니다: ${e.response?.data?.message || e.message}`
+      );
+      if (context?.previousBookmarks) {
+        queryClient.setQueryData(['bookmarks'], context.previousBookmarks);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+      queryClient.invalidateQueries({ queryKey: ['inbox'] });
+    },
+  });
+
+  const handleBookmarkToggle = (e: React.MouseEvent, id: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (bookmarkedIds.has(id)) {
+      // Find the bookmarkId corresponding to this articleId
+      const bookmark = bookmarkedArticles.find((b) => b.id === id);
+      if (bookmark && bookmark.bookmarkId) {
+        if (window.confirm('북마크를 해제하시겠습니까?')) {
+          removeBookmarkMutation.mutate(bookmark.bookmarkId);
+        }
+      } else {
+        // Fallback or optimistic weirdness (e.g. just added).
+        // If we don't have bookmarkId, we assume it's not fully synced or logic is tricky.
+        // For now, alert failure or try to refresh.
+        console.error('Bookmark ID not found for article', id);
+        alert('북마크 정보를 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
+      }
+    } else {
+      if (window.confirm('이 글을 북마크하시겠습니까?')) {
+        addBookmarkMutation.mutate(id);
+      }
+    }
+  };
+
   // Infinite scroll trigger
   useEffect(() => {
     if (inView && hasNextPage) {
@@ -205,8 +326,8 @@ const HomePage = () => {
                 to={`/article/${article.id}`}
                 className={styles.articleItem}
               >
-                <div className={styles.boardName}>
-                  [{article.board.name}]
+                <div className={styles.headerRow}>
+                  <div className={styles.boardName}>[{article.board.name}]</div>
                   {user &&
                     /**
                      * Find the subscription object for this board.
@@ -218,12 +339,13 @@ const HomePage = () => {
                       const isSubscribed = !!subscription;
 
                       return (
-                        <button
-                          className={`${styles.subscribeButton} ${
-                            isSubscribed ? styles.subscribed : ''
+                        <span
+                          className={`${styles.subscribeTag} ${
+                            isSubscribed ? styles.active : ''
                           }`}
                           onClick={(e) => {
-                            e.preventDefault();
+                            e.preventDefault(); // Prevent Link navigation
+                            e.stopPropagation();
 
                             if (isSubscribed) {
                               if (window.confirm('구독을 취소하시겠습니까?')) {
@@ -237,11 +359,48 @@ const HomePage = () => {
                               }
                             }
                           }}
+                          role="button"
                         >
                           {isSubscribed ? '✔ 구독중' : '구독'}
-                        </button>
+                        </span>
                       );
                     })()}
+                  <span
+                    className={`${styles.bookmarkTag} ${
+                      bookmarkedIds.has(article.id) ? styles.bookmarkActive : ''
+                    }`}
+                    onClick={(e) => handleBookmarkToggle(e, article.id)}
+                    role="button"
+                    title={
+                      bookmarkedIds.has(article.id) ? '북마크 해제' : '북마크'
+                    }
+                  >
+                    {bookmarkedIds.has(article.id) ? (
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
+                      </svg>
+                    ) : (
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
+                      </svg>
+                    )}
+                  </span>
                 </div>
                 <div className={styles.articleTitle}>{article.title}</div>
                 <div className={styles.articleMeta}>
