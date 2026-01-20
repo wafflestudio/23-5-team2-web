@@ -30,11 +30,11 @@ const App = () => {
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/article/:articleId" element={<ArticleDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
           <Route element={<ProtectedRoute />}>
-            <Route path="/article/:articleId" element={<ArticleDetailPage />} />
             <Route path="/mypage" element={<MyPage />} />
             <Route path="/inbox" element={<Inbox />} />
             <Route path="/bookmark" element={<BookmarkPage />} />
