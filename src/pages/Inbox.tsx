@@ -372,7 +372,7 @@ const Inbox = () => {
           next.add(id);
           return next;
         });
-        alert('삭제되었습니다. (Design Review Mode)');
+        alert('삭제되었습니다.');
       } else {
         deleteMutation.mutate(id);
       }
