@@ -1,0 +1,485 @@
+/* Main Page Container (similar to HomePage) */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  padding: 20px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: #333;
+  text-align: center; /* Or left if preferred, usually center for titles */
+}
+
+.headerArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.bulkActions {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 600px;
+}
+
+.selectModeBtn {
+  background-color: transparent;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  padding: 6px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.selectModeBtn:hover {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.selectionControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background-color: #f8f9fa;
+  padding: 10px 16px;
+  border-radius: 8px;
+}
+
+.selectAllContainer {
+  cursor: pointer;
+}
+
+.selectAllLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}
+
+.selectAllLabel input {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cancelSelectionBtn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #999;
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancelSelectionBtn:hover {
+  color: #333;
+}
+
+.bulkDeleteBtn {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.bulkDeleteBtn:hover {
+  background-color: #e60000;
+}
+
+.inboxWrapper {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 2rem;
+  align-items: flex-start;
+  position: relative; /* For sticky sidebar context */
+}
+
+/* Left side: Subscribed Boards Sidebar */
+.sidebarArea {
+  width: 240px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 20px;
+}
+
+/* Right side: Notification List */
+.notificationList {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 1050px; /* Approx 15 items * 70px */
+}
+
+.headerAction {
+  display: none;
+}
+
+.markReadBtn {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.markReadBtn:hover {
+  background-color: #e2e6ea;
+}
+
+.notificationItem {
+  padding: 16px 0;
+}
+
+.unread .itemTitle {
+  font-weight: 700; /* Bolder text for unread */
+}
+
+.unread {
+  border-left: 3px solid #3b82f6;
+  padding-left: 12px;
+}
+
+.itemWrapper {
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.itemWrapper:hover {
+  background-color: #f8f9fa;
+}
+
+.itemWrapper:hover .deleteButton {
+  opacity: 1;
+}
+
+.itemWrapper {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+  padding-left: 10px;
+}
+
+.checkboxArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.checkboxArea input {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.deleteButton {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+  padding: 8px;
+  border-radius: 50%;
+  color: #999;
+  z-index: 10;
+}
+
+.deleteButton:hover {
+  background-color: #ffeaea;
+  color: #ff4d4d;
+}
+
+.notificationItem {
+  padding: 16px 0;
+  /* border-bottom removed from here as it's now on wrapper */
+  display: block;
+  padding-right: 48px; /* Make space for delete button */
+}
+
+.itemCategory {
+  color: rgb(72, 65, 155);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.itemTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.itemFooter {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.bookmarkTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: #ccc; /* Inactive color */
+  transition: all 0.2s;
+  z-index: 20;
+}
+
+.bookmarkTag:hover {
+  background-color: #f5f5f5;
+  color: #999;
+}
+
+.bookmarkTag.active {
+  background-color: rgba(255, 193, 7, 0.15); /* Light yellow background */
+  color: #ffc107; /* Brighter Yellow */
+  border-color: transparent;
+}
+.bookmarkTag.active:hover {
+  background-color: rgba(255, 193, 7, 0.25);
+}
+
+.subscribeTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid rgb(72, 65, 155);
+  background-color: white;
+  color: rgb(72, 65, 155);
+  transition: all 0.2s;
+  z-index: 20;
+}
+
+.subscribeTag:hover {
+  background-color: rgba(72, 65, 155, 0.1);
+}
+
+.subscribeTag.active {
+  background-color: rgb(72, 65, 155);
+  color: white;
+}
+
+.divider {
+  margin: 0 8px;
+}
+
+.emptyNotice {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  white-space: nowrap; /* Ensure single line */
+}
+
+/* Subscribed Boards Section (Now in Sidebar) */
+.subscribedSection {
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+
+.sidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sectionTitle {
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.editButton {
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.editButton:hover {
+  background-color: #eee;
+  color: #333;
+}
+
+.boardList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.boardTag {
+  background-color: white;
+  border: 1px solid rgb(72, 65, 155);
+  color: rgb(72, 65, 155);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: default;
+  transition: all 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.boardTag:hover {
+  background-color: rgba(72, 65, 155, 0.1);
+}
+
+.boardTag.editing {
+  cursor: pointer;
+}
+
+.boardTag.editing:hover {
+  transform: translateY(-1px);
+}
+
+.boardTag.active {
+  background-color: rgb(72, 65, 155);
+  color: white;
+  box-shadow: 0 2px 4px rgba(72, 65, 155, 0.3);
+}
+
+.boardTag.inactive {
+  background-color: #f1f1f1;
+  border-color: #ccc;
+  color: #999;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.boardTag.inactive:hover {
+  background-color: #e5e5e5;
+  color: #777;
+}
+
+.checkIcon {
+  font-size: 0.7em;
+}
+
+.noSubscriptions {
+  color: #888;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Pagination Controls */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: auto;
+  gap: 16px;
+  padding-top: 20px;
+}
+
+.pageBtn {
+  background-color: white;
+  border: 1px solid #ddd;
+  color: #333;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background-color: #f1f1f1;
+}
+
+.pageBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageNumber {
+  font-weight: 600;
+  color: #333;
+}
+
+.deleteTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: #ccc; /* Inactive color */
+  transition: all 0.2s;
+  z-index: 20;
+}
+
+.deleteTag:hover {
+  background-color: rgba(255, 77, 77, 0.1);
+  color: #ff4d4d;
+}

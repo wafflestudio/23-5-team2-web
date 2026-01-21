@@ -11,6 +11,9 @@ export interface Article {
   publishedAt: string; // ISO8601
   createdAt: string;
   updatedAt: string;
+  isRead: boolean;
+  bookmarkId?: number; // For bookmark management
+  isInbox?: boolean; // For differentiating Feed vs Inbox items
 }
 
 interface ArticlePaging {
