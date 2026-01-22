@@ -3,7 +3,6 @@ import { api } from './instance';
 
 interface UploadImageResponse {
   url?: string;
-  sourceUrl?: string;
 }
 
 export const uploadImage = async (file: File): Promise<string> => {
@@ -16,5 +15,5 @@ export const uploadImage = async (file: File): Promise<string> => {
     },
   });
 
-  return response.data.url || response.data.sourceUrl || '';
+  return response.data.url || '';
 };
