@@ -1,12 +1,15 @@
 // App.tsx
+
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import './style.css';
+import { NuqsAdapter } from 'nuqs/adapters/react';
 import { useEffect } from 'react';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
 import ArticleDetailPage from './pages/ArticleDetailPage';
 import BookmarkPage from './pages/BookmarkPage';
+import CreateArticlePage from './pages/CreateArticlePage';
 import HomePage from './pages/HomePage';
 import Inbox from './pages/Inbox';
 import LoginPage from './pages/LoginPage';
@@ -26,24 +29,28 @@ const App = () => {
 
   return (
     <Router>
-      <Header />
-      <main>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/article/:articleId" element={<ArticleDetailPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+      <NuqsAdapter>
+        <Header />
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/article/:articleId" element={<ArticleDetailPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-          <Route element={<ProtectedRoute />}>
-            <Route path="/mypage" element={<MyPage />} />
-            <Route path="/inbox" element={<Inbox />} />
-            <Route path="/bookmark" element={<BookmarkPage />} />
-          </Route>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/create" element={<CreateArticlePage />} />
+              <Route path="/edit/:articleId" element={<CreateArticlePage />} />
+              <Route path="/mypage" element={<MyPage />} />
+              <Route path="/inbox" element={<Inbox />} />
+              <Route path="/bookmark" element={<BookmarkPage />} />
+            </Route>
 
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </main>
-      <Footer />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </main>
+        <Footer />
+      </NuqsAdapter>
     </Router>
   );
 };

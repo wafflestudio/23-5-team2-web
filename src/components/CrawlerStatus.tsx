@@ -19,10 +19,17 @@ export const CrawlerStatus = () => {
     const updated = new Date(dateStr);
     const diffMs = now.getTime() - updated.getTime();
 
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMinutes / 60);
+    const diffMinutesTotal = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+    const diffDays = Math.floor(diffMinutesTotal / (60 * 24));
+    const diffHours = Math.floor((diffMinutesTotal - diffDays * 24 * 60) / 60);
+    const diffMinutes = diffMinutesTotal - diffDays * 24 * 60 - diffHours * 60;
 
-    if (diffHours > 0) return `${diffHours}시간 ${diffMinutes % 60}분 전`;
+    if (diffDays > 0) {
+      return `${diffDays}일 ${diffHours}시간 ${diffMinutes}분 전`;
+    }
+    if (diffHours > 0) {
+      return `${diffHours}시간 ${diffMinutes}분 전`;
+    }
     return `${diffMinutes}분 전`;
   };
 

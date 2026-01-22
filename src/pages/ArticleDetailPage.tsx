@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
+// pages/ArticleDetailPage.tsx
+import DOMPurify from 'dompurify';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getArticleDetail } from '../apis/articleApi';
 import {
@@ -18,6 +20,7 @@ const ArticleDetailPage = () => {
   const { articleId } = useParams<{ articleId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const from = location.state?.from || '';
   const queryClient = useQueryClient();
   const { user } = useUserStore();
 
@@ -31,12 +34,10 @@ const ArticleDetailPage = () => {
     data: article,
     isLoading,
     isError,
-    error,
   } = useQuery({
     queryKey: ['article', articleId],
     queryFn: () => getArticleDetail(Number(articleId)),
     enabled: !!articleId,
-    retry: 1,
   });
 
   // Fetch My Subscriptions
@@ -191,14 +192,30 @@ const ArticleDetailPage = () => {
     if (error?.response?.status === 404) {
       return <NotFoundPage />;
     }
-    return <div className={styles.error}>에러가 발생했습니다.</div>;
   }
 
-  if (!article) return null;
+  const handleEdit = () => {
+    navigate(`/edit/${articleId}`, { state: { from } });
+  };
+
+  const handleBack = () => {
+    if (from) {
+      navigate(`/${from}`);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  if (isLoading) return <div className={styles.loading}>Loading...</div>;
+  if (isError || !article)
+    return <div className={styles.error}>게시글을 불러올 수 없습니다.</div>;
+
+  // Sanitize HTML content
+  const sanitizedContent = DOMPurify.sanitize(article.content);
 
   return (
     <div className={styles.container}>
-      <button onClick={() => navigate(-1)} className={styles.backButton}>
+      <button onClick={handleBack} className={styles.backButton}>
         목록으로
       </button>
 
@@ -304,36 +321,29 @@ const ArticleDetailPage = () => {
             })()}
         </div>
         <h1 className={styles.title}>{article.title}</h1>
-        <div className={styles.metaInfo}>
-          <div>
-            <span style={{ marginRight: '15px' }}>
-              작성자: {article.author}
-            </span>
-            <span>{new Date(article.publishedAt).toLocaleString()}</span>
-          </div>
+        <div className={styles.infoRow}>
+          <span className={styles.author}>{article.author || '익명'}</span>
+          <span className={styles.date}>
+            {new Date(article.publishedAt).toLocaleDateString()}
+          </span>
+          {user && (
+            <div className={styles.buttonGroup}>
+              <button onClick={handleEdit} className={styles.editButton}>
+                수정
+              </button>
+              <button onClick={handleDelete} className={styles.deleteButton}>
+                삭제
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Render Sanitized HTML */}
       <div
-        className={styles.content}
-        dangerouslySetInnerHTML={{ __html: article.content }}
+        className={styles.articleBody}
+        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
       />
-
-      {article.originLink && (
-        <div className={styles.originLinkBox}>
-          <p className={styles.originLinkText}>
-            <strong>원본 링크: </strong>
-            <a
-              href={article.originLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.link}
-            >
-              {article.originLink}
-            </a>
-          </p>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,0 +1,272 @@
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgb(72, 65, 155);
+}
+
+/* Markdown Editor Styles */
+.editorContainer {
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 500px;
+}
+
+.tabHeader {
+  display: flex;
+  background-color: #f6f8fa;
+  border-bottom: 1px solid #d0d7de;
+  padding: 8px 8px 0;
+  gap: 8px;
+}
+
+.tabButton {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  background: none;
+  font-size: 0.9rem;
+  color: #57606a;
+  position: relative;
+  top: 1px;
+}
+
+.tabButton:hover {
+  color: #24292f;
+}
+
+.tabButton.active {
+  background-color: white;
+  border-color: #d0d7de;
+  border-bottom-color: white;
+  color: #24292f;
+  font-weight: 600;
+}
+
+.contentArea {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.markdownTextarea {
+  width: 100%;
+  flex: 1;
+  min-height: 500px;
+  border: none;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+    Liberation Mono, monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #24292f;
+  outline: none;
+}
+
+/* Preview Styles (GitHub-like Typography) */
+.previewArea {
+  min-height: 500px;
+  padding-bottom: 20px;
+}
+
+.prose {
+  color: #24292f;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.prose h1 {
+  font-size: 2em;
+  border-bottom: 1px solid #d0d7de;
+  padding-bottom: 0.3em;
+}
+.prose h2 {
+  font-size: 1.5em;
+  border-bottom: 1px solid #d0d7de;
+  padding-bottom: 0.3em;
+}
+.prose h3 {
+  font-size: 1.25em;
+}
+
+.prose p {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.prose ul,
+.prose ol {
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding-left: 2em;
+}
+
+.prose li {
+  word-wrap: break-word;
+}
+
+.prose pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.prose code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(175, 184, 193, 0.2);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+    Liberation Mono, monospace;
+}
+
+.prose pre code {
+  padding: 0;
+  background-color: transparent;
+}
+
+.prose blockquote {
+  padding: 0 1em;
+  color: #57606a;
+  border-left: 0.25em solid #d0d7de;
+  margin: 0 0 16px 0;
+}
+
+.prose img {
+  max-width: 100%;
+  box-sizing: content-box;
+  background-color: #fff;
+}
+
+.prose table {
+  border-spacing: 0;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.prose table th,
+.prose table td {
+  padding: 6px 13px;
+  border: 1px solid #d0d7de;
+}
+
+.prose table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+/* Button Group */
+.buttonGroup {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.cancelButton,
+.submitButton {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancelButton {
+  background-color: white;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.cancelButton:hover {
+  background-color: #f8f9fa;
+  border-color: #ccc;
+  color: #333;
+}
+
+.submitButton {
+  background-color: rgb(72, 65, 155);
+  border: none;
+  color: white;
+}
+
+.submitButton:hover {
+  background-color: rgb(15, 15, 112);
+}
+
+.submitButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.errorMessage {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}

@@ -224,7 +224,7 @@ const Inbox = () => {
     queryKey: ['inbox-history', user?.id, subscribedBoardIds.join(',')],
     queryFn: () =>
       getArticles({
-        boardids:
+        boardIds:
           subscribedBoardIds.length > 0
             ? subscribedBoardIds.join(',')
             : undefined,

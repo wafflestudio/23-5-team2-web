@@ -7,9 +7,15 @@ import {
 } from '@tanstack/react-query';
 // pages/HomePage.tsx
 import { AxiosError } from 'axios';
-import React, { useEffect, useState } from 'react';
+import {
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsString,
+  useQueryState,
+} from 'nuqs';
+import React, { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { getArticles } from '../apis/articleApi';
 import {
   type Subscription,
@@ -24,8 +30,7 @@ import type { Article, ArticleListResponse } from '../types/article';
 import styles from './HomePage.module.css';
 
 const HomePage = () => {
-  const [keyword, setKeyword] = useState('');
-  const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([]);
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { user } = useUserStore();
 
@@ -38,6 +43,35 @@ const HomePage = () => {
     queryFn: getBoards,
   });
 
+  const ALL_BOARD_IDS = boards.map((b) => b.id).sort((a, b) => a - b);
+
+  // 2. State Management with nuqs
+  const [keyword, setKeyword] = useQueryState(
+    'keyword',
+    parseAsString.withDefault('').withOptions({
+      clearOnDefault: true,
+      shallow: true,
+    })
+  );
+
+  const [selectedBoardIds, setSelectedBoardIds] = useQueryState(
+    'boardIds',
+    parseAsArrayOf(parseAsInteger)
+      .withDefault(ALL_BOARD_IDS)
+      .withOptions({
+        clearOnDefault: true,
+        shallow: true,
+        history: 'push', // Optional: user requirement just mentioned clean URL
+      })
+    // User asked for: .withOptions({ clearOnDefault: true, shallow: true })
+  );
+
+  // Derived variables
+  const isAllSelected =
+    boards.length > 0 && selectedBoardIds.length === boards.length;
+  const isNoneSelected = selectedBoardIds.length === 0;
+  void isNoneSelected; // Silence unused variable warning
+
   // Track if we have initialized the selection
   const hasInitialized = React.useRef(false);
 
@@ -47,29 +81,27 @@ const HomePage = () => {
       setSelectedBoardIds(boards.map((b) => b.id));
       hasInitialized.current = true;
     }
-  }, [boards]);
+  }, [boards, setSelectedBoardIds]);
 
   // Handle Select All
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAllToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedBoardIds(boards.map((b) => b.id));
+      setSelectedBoardIds(ALL_BOARD_IDS);
     } else {
       setSelectedBoardIds([]);
     }
   };
 
   const handleBoardCheck = (id: number, checked: boolean) => {
-    if (checked) {
-      setSelectedBoardIds((prev) => [...prev, id]);
-    } else {
-      setSelectedBoardIds((prev) => prev.filter((bid) => bid !== id));
-    }
+    setSelectedBoardIds((prev) => {
+      if (checked) {
+        return [...prev, id].sort((a, b) => a - b);
+      }
+      return prev.filter((bid) => bid !== id).sort((a, b) => a - b);
+    });
   };
 
-  const isAllSelected =
-    boards.length > 0 && selectedBoardIds.length === boards.length;
-
-  // 2. Fetch Articles (Infinite)
+  // 3. Fetch Articles (Infinite)
   const {
     data,
     fetchNextPage,
@@ -82,7 +114,7 @@ const HomePage = () => {
     queryFn: ({ pageParam }) =>
       getArticles({
         keyword,
-        boardids:
+        boardIds:
           selectedBoardIds.length > 0 ? selectedBoardIds.join(',') : undefined,
         limit: 20,
         nextPublishedAt: pageParam?.nextPublishedAt,
@@ -292,25 +324,36 @@ const HomePage = () => {
       {/* Board Filters */}
       <div className={styles.filterContainer}>
         <h3 className={styles.filterTitle}>게시판 선택</h3>
-        <div className={styles.checkboxGroup}>
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={isAllSelected}
-              onChange={handleSelectAll}
-            />
-            전체 선택
-          </label>
-          {boards.map((board) => (
-            <label key={board.id} className={styles.checkboxLabel}>
+        <div className={styles.filterContent}>
+          <div className={styles.checkboxGroup}>
+            <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={selectedBoardIds.includes(board.id)}
-                onChange={(e) => handleBoardCheck(board.id, e.target.checked)}
+                checked={isAllSelected}
+                onChange={handleAllToggle}
               />
-              {board.name}
+              전체 선택
             </label>
-          ))}
+            {boards.map((board) => (
+              <label key={board.id} className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={selectedBoardIds.includes(board.id)}
+                  onChange={(e) => handleBoardCheck(board.id, e.target.checked)}
+                />
+                {board.name}
+              </label>
+            ))}
+          </div>
+          {user && (
+            <Link
+              to="/create"
+              className={styles.writeButton}
+              state={{ from: location.search }}
+            >
+              글쓰기
+            </Link>
+          )}
         </div>
       </div>
 
@@ -324,6 +367,7 @@ const HomePage = () => {
               <Link
                 key={article.id}
                 to={`/article/${article.id}`}
+                state={{ from: location.search }}
                 className={styles.articleItem}
               >
                 <div className={styles.headerRow}>
