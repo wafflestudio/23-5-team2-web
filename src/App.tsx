@@ -6,11 +6,15 @@ import { NuqsAdapter } from 'nuqs/adapters/react';
 import { useEffect } from 'react';
 import Footer from './components/Footer';
 import Header from './components/Header';
+import ProtectedRoute from './components/ProtectedRoute';
 import ArticleDetailPage from './pages/ArticleDetailPage';
+import BookmarkPage from './pages/BookmarkPage';
 import CreateArticlePage from './pages/CreateArticlePage';
 import HomePage from './pages/HomePage';
+import Inbox from './pages/Inbox';
 import LoginPage from './pages/LoginPage';
 import MyPage from './pages/MyPage';
+import NotFoundPage from './pages/NotFoundPage';
 import RegisterPage from './pages/RegisterPage';
 import { useUserStore } from './store/useUserStore';
 
@@ -35,7 +39,14 @@ const App = () => {
             <Route path="/article/:articleId" element={<ArticleDetailPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/mypage" element={<MyPage />} />
+            
+            <Route element={<ProtectedRoute />}>
+              <Route path="/mypage" element={<MyPage />} />
+              <Route path="/inbox" element={<Inbox />} />
+              <Route path="/bookmark" element={<BookmarkPage />} />
+            </Route>
+
+          <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
         <Footer />

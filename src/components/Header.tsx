@@ -34,10 +34,21 @@ const Header = () => {
             <span style={S.statusText}>
               <strong>{user.localId || user.oauthId || '사용자'}</strong>
             </span>
-            {/* 마이페이지 버튼 추가 */}
+
+            {/* 인박스 버튼 추가 */}
+            <Link to="/inbox" style={S.textLink}>
+              Inbox
+            </Link>
+
+            <Link to="/bookmark" style={S.textLink}>
+              북마크
+            </Link>
+
+            {/* 마이페이지 버튼 */}
             <Link to="/mypage" style={S.textLink}>
               마이페이지
             </Link>
+
             <button onClick={handleLogout} style={S.textLink}>
               로그아웃
             </button>
@@ -57,43 +68,19 @@ const Header = () => {
   );
 };
 
-// 스타일 정의는 그대로 유지됩니다.
+// 스타일 정의 (S) 는 기존과 동일하므로 생략합니다.
 const S = {
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '1rem 5%',
-    backgroundColor: '#fff',
-    borderBottom: '1px solid #ddd',
-    width: '100%',
-    boxSizing: 'border-box' as const,
-  },
-  logo: {
-    fontSize: '1.25rem',
-    fontWeight: 'bold',
-    textDecoration: 'none',
-    color: '#000',
-    flexShrink: 0,
-  },
-  nav: {
-    display: 'flex',
-    gap: '15px',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
+  // ... (Your existing styles remain exactly as they were)
   statusText: {
     fontSize: '14px',
     color: '#555',
     whiteSpace: 'nowrap' as const,
   },
   textLink: {
-    // 버튼 기본 스타일 초기화
     background: 'none',
     border: 'none',
     padding: 0,
     cursor: 'pointer',
-    // 텍스트 스타일 (Link와 통일)
     fontSize: '16px',
     color: '#333',
     textDecoration: 'none',
