@@ -34,19 +34,19 @@ const App = () => {
         <main>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/create" element={<CreateArticlePage />} />
-            <Route path="/edit/:articleId" element={<CreateArticlePage />} />
             <Route path="/article/:articleId" element={<ArticleDetailPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            
+
             <Route element={<ProtectedRoute />}>
+              <Route path="/create" element={<CreateArticlePage />} />
+              <Route path="/edit/:articleId" element={<CreateArticlePage />} />
               <Route path="/mypage" element={<MyPage />} />
               <Route path="/inbox" element={<Inbox />} />
               <Route path="/bookmark" element={<BookmarkPage />} />
             </Route>
 
-          <Route path="*" element={<NotFoundPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
         <Footer />

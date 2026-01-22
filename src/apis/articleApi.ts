@@ -25,10 +25,6 @@ export const updateArticle = async (
   return response.data;
 };
 
-export const deleteArticle = async (articleId: number): Promise<void> => {
-  await api.delete(`/v1/articles/${articleId}`);
-};
-
 export const getArticles = async (
   params: ArticleFilterParams
 ): Promise<ArticleListResponse> => {

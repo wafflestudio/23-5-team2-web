@@ -345,13 +345,15 @@ const HomePage = () => {
               </label>
             ))}
           </div>
-          <Link
-            to="/create"
-            className={styles.writeButton}
-            state={{ from: location.search }}
-          >
-            글쓰기
-          </Link>
+          {user && (
+            <Link
+              to="/create"
+              className={styles.writeButton}
+              state={{ from: location.search }}
+            >
+              글쓰기
+            </Link>
+          )}
         </div>
       </div>
 

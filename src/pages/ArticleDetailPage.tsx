@@ -192,7 +192,7 @@ const ArticleDetailPage = () => {
     if (error?.response?.status === 404) {
       return <NotFoundPage />;
     }
-  };
+  }
 
   const handleEdit = () => {
     navigate(`/edit/${articleId}`, { state: { from } });
@@ -326,14 +326,16 @@ const ArticleDetailPage = () => {
           <span className={styles.date}>
             {new Date(article.publishedAt).toLocaleDateString()}
           </span>
-          <div className={styles.buttonGroup}>
-            <button onClick={handleEdit} className={styles.editButton}>
-              수정
-            </button>
-            <button onClick={handleDelete} className={styles.deleteButton}>
-              삭제
-            </button>
-          </div>
+          {user && (
+            <div className={styles.buttonGroup}>
+              <button onClick={handleEdit} className={styles.editButton}>
+                수정
+              </button>
+              <button onClick={handleDelete} className={styles.deleteButton}>
+                삭제
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
