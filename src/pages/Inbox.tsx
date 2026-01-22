@@ -6,9 +6,8 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getArticles } from '../apis/articleApi';
 import {
   getBoards,
   getMySubscriptions,
@@ -66,26 +65,6 @@ const Inbox = () => {
           if (found) {
             articleToAdd = found;
             break;
-          }
-        }
-      }
-
-      // If not found in Inbox, check History (Mock) cache
-      if (!articleToAdd) {
-        // Reconstruct the key logic used in useQuery, or search broadly
-        // Since we can't easily replicate dynamic keys inside onMutate without props,
-        // we'll try to find any 'inbox-history' query.
-        const historyQueries = queryClient.getQueriesData<ArticleListResponse>({
-          queryKey: ['inbox-history'],
-        });
-
-        for (const [_, data] of historyQueries) {
-          if (data?.data) {
-            const found = data.data.find((msg) => msg.id === newBookmarkId);
-            if (found) {
-              articleToAdd = found;
-              break;
-            }
           }
         }
       }
@@ -216,93 +195,18 @@ const Inbox = () => {
       enabled: !!user,
     });
 
-  // Calculate Subscribed Board IDs
-  const subscribedBoardIds = subscriptions.map((s) => s.boardId);
-
-  // 2. Fetch 10 Recent Articles (History) for Design Review
-  const { data: historyData } = useQuery({
-    queryKey: ['inbox-history', user?.id, subscribedBoardIds.join(',')],
-    queryFn: () =>
-      getArticles({
-        boardids:
-          subscribedBoardIds.length > 0
-            ? subscribedBoardIds.join(',')
-            : undefined,
-        limit: 10,
-      }),
-    enabled: !!user,
-  });
-
   // Pagination State
   const [pageIndex, setPageIndex] = useState(0);
 
-  // Interaction State for Mock Items (History) - Persisted in SessionStorage
-  const [mockReadIds, setMockReadIds] = useState<Set<number>>(() => {
-    try {
-      const saved = sessionStorage.getItem('inbox_mock_read');
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
-  const [mockDeletedIds, setMockDeletedIds] = useState<Set<number>>(() => {
-    try {
-      const saved = sessionStorage.getItem('inbox_mock_deleted');
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
-
-  // Sync Mock State to SessionStorage
-  useEffect(() => {
-    sessionStorage.setItem(
-      'inbox_mock_read',
-      JSON.stringify(Array.from(mockReadIds))
-    );
-  }, [mockReadIds]);
-
-  useEffect(() => {
-    sessionStorage.setItem(
-      'inbox_mock_deleted',
-      JSON.stringify(Array.from(mockDeletedIds))
-    );
-  }, [mockDeletedIds]);
-
-  // Merge Logic
-  const inboxPageData =
+  // Use Data Directly
+  const inboxMessages =
     (data?.pages?.[pageIndex]?.data || []).map((item) => ({
       ...item,
       isInbox: true,
     })) || [];
 
-  const historyPageData = (historyData?.data || [])
-    .filter((item) => !mockDeletedIds.has(item.id))
-    .map((item) => ({
-      ...item,
-      isInbox: true, // Visualize as Inbox
-      isRead: mockReadIds.has(item.id), // Visualize Read status based on local state
-      isMock: true, // Flag as mock item
-    }));
-
-  // Combine: Inbox first, then History (deduplicated)
-  const combinedMap = new Map();
-  // Add history first
-  historyPageData.forEach((item) => combinedMap.set(item.id, item));
-  // Add inbox (overwrites history if duplicate exists, ensuring isInbox: true permissions)
-  inboxPageData.forEach((item) => combinedMap.set(item.id, item));
-
-  // Convert to array and sort by publishedAt desc
-  const inboxMessages = Array.from(combinedMap.values()).sort(
-    (a, b) =>
-      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-  );
-
   const handleNextPage = () => {
-    if (
-      pageIndex < (data?.pages.length || 0) - 1 ||
-      pageIndex < ((historyData?.data || []).length > 0 ? 0 : -1)
-    ) {
+    if (pageIndex < (data?.pages.length || 0) - 1) {
       setPageIndex(pageIndex + 1);
     } else if (hasNextPage) {
       fetchNextPage().then(() => setPageIndex(pageIndex + 1));
@@ -362,20 +266,11 @@ const Inbox = () => {
     },
   });
 
-  const handleDelete = (e: React.MouseEvent, id: number, isMock?: boolean) => {
+  const handleDelete = (e: React.MouseEvent, id: number) => {
     e.preventDefault(); // Prevent Link navigation
     e.stopPropagation();
     if (window.confirm('정말 삭제하시겠습니까?')) {
-      if (isMock) {
-        setMockDeletedIds((prev) => {
-          const next = new Set(prev);
-          next.add(id);
-          return next;
-        });
-        alert('삭제되었습니다.');
-      } else {
-        deleteMutation.mutate(id);
-      }
+      deleteMutation.mutate(id);
     }
   };
 
@@ -414,38 +309,12 @@ const Inbox = () => {
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
 
-    // Separate Mock vs Real items
-    const selectedMessages = filteredMessages.filter((m) =>
-      selectedIds.has(m.id)
-    );
-    const mockIdsToDelete = selectedMessages
-      .filter((m) => (m as Article & { isMock?: boolean }).isMock)
-      .map((m) => m.id);
-    const realIdsToDelete = selectedMessages
-      .filter((m) => m.isInbox && !(m as Article & { isMock?: boolean }).isMock)
-      .map((m) => m.id);
-
-    if (mockIdsToDelete.length === 0 && realIdsToDelete.length === 0) {
-      alert('삭제할 수 있는 메시지가 선택되지 않았습니다.');
-      return;
-    }
+    const idsToDelete = Array.from(selectedIds);
 
     if (window.confirm(`${selectedIds.size}개의 메시지를 삭제하시겠습니까?`)) {
       try {
-        // 1. Handle Real Deletes
-        if (realIdsToDelete.length > 0) {
-          await Promise.all(realIdsToDelete.map((id) => deleteInbox(id)));
-          queryClient.invalidateQueries({ queryKey: ['inbox'] });
-        }
-
-        // 2. Handle Mock Deletes
-        if (mockIdsToDelete.length > 0) {
-          setMockDeletedIds((prev) => {
-            const next = new Set(prev);
-            mockIdsToDelete.forEach((id) => next.add(id));
-            return next;
-          });
-        }
+        await Promise.all(idsToDelete.map((id) => deleteInbox(id)));
+        queryClient.invalidateQueries({ queryKey: ['inbox'] });
 
         setSelectedIds(new Set());
         setIsSelectionMode(false);
@@ -473,36 +342,20 @@ const Inbox = () => {
 
   const handleRead = (
     e: React.MouseEvent,
-    article: Article & { isInbox?: boolean; isMock?: boolean }
+    article: Article & { isInbox?: boolean }
   ) => {
     // Prevent default link navigation to handle logic first
     e.preventDefault();
     if (isSelectionMode) return;
 
-    // Handle Mock Read
-    if (article.isMock) {
-      if (!article.isRead) {
-        setMockReadIds((prev) => {
-          const next = new Set(prev);
-          next.add(article.id);
-          // Sync immediately to session storage to ensure persistence across navigation
-          sessionStorage.setItem(
-            'inbox_mock_read',
-            JSON.stringify(Array.from(next))
-          );
-          return next;
-        });
-      }
-    }
     // Only mark as read if it's an Inbox item and currently unread
-    else if (article.isInbox && !article.isRead) {
+    if (article.isInbox && !article.isRead) {
       readMutation.mutate(article.id);
     }
 
     // Navigate programmatically passing the state
     navigate(`/article/${article.id}`, {
       state: {
-        isMock: article.isMock,
         isInbox: article.isInbox,
       },
     });
@@ -736,8 +589,7 @@ const Inbox = () => {
                           onClick={(e) =>
                             handleDelete(
                               e,
-                              article.id,
-                              (article as Article & { isMock?: boolean }).isMock
+                              article.id
                             )
                           }
                           role="button"
