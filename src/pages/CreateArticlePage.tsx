@@ -54,7 +54,7 @@ const CreateArticlePage = () => {
   useEffect(() => {
     const convertMarkdown = async () => {
       try {
-        const html = await marked.parse(content);
+        const html = await marked.parse(content, { breaks: true });
         setPreviewHtml(html);
       } catch (error) {
         console.error('Markdown conversion failed:', error);
@@ -142,7 +142,7 @@ const CreateArticlePage = () => {
 
     let htmlContent = '';
     try {
-      htmlContent = await marked.parse(content);
+      htmlContent = await marked.parse(content, { breaks: true });
     } catch (err) {
       console.error('Markdown conversion failed on submit:', err);
       htmlContent = content; // Fallback? or return
