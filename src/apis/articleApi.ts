@@ -12,7 +12,6 @@ export const createArticle = async (
   // Hardcoding boardId to 1 as backend likely requires it
   const response = await api.post<Article>('/v1/articles', {
     ...data,
-    boardId: 1,
   });
   return response.data;
 };
