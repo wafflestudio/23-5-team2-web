@@ -12,6 +12,11 @@ export interface Article {
   createdAt: string;
   updatedAt: string;
   isRead: boolean;
+  views: number;
+  likes: number;
+  dislikes: number;
+  isLiked?: boolean;
+  isDisliked?: boolean;
   bookmarkId?: number; // For bookmark management
   isInbox?: boolean; // For differentiating Feed vs Inbox items
 }

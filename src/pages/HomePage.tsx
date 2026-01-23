@@ -27,6 +27,7 @@ import {
 import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
 import { useUserStore } from '../store/useUserStore';
 import type { Article, ArticleListResponse } from '../types/article';
+import ArticleItemStats from '../components/ArticleItemStats';
 import styles from './HomePage.module.css';
 
 const HomePage = () => {
@@ -370,91 +371,129 @@ const HomePage = () => {
                 state={{ from: location.search }}
                 className={styles.articleItem}
               >
-                <div className={styles.headerRow}>
-                  <div className={styles.boardName}>[{article.board.name}]</div>
-                  {user &&
-                    /**
-                     * Find the subscription object for this board.
-                     */
-                    (() => {
-                      const subscription = subscriptions.find(
-                        (sub) => sub.boardId === article.board.id
-                      );
-                      const isSubscribed = !!subscription;
+                <div className={styles.itemContent}>
+                  <div className={styles.headerRow}>
+                    <div className={styles.boardName}>
+                      [{article.board.name}]
+                    </div>
+                    {user &&
+                      /**
+                       * Find the subscription object for this board.
+                       */
+                      (() => {
+                        const subscription = subscriptions.find(
+                          (sub) => sub.boardId === article.board.id
+                        );
+                        const isSubscribed = !!subscription;
 
-                      return (
-                        <span
-                          className={`${styles.subscribeTag} ${
-                            isSubscribed ? styles.active : ''
-                          }`}
-                          onClick={(e) => {
-                            e.preventDefault(); // Prevent Link navigation
-                            e.stopPropagation();
+                        return (
+                          <span
+                            className={`${styles.subscribeTag} ${
+                              isSubscribed ? styles.active : ''
+                            }`}
+                            onClick={(e) => {
+                              e.preventDefault(); // Prevent Link navigation
+                              e.stopPropagation();
 
-                            if (isSubscribed) {
-                              if (window.confirm('구독을 취소하시겠습니까?')) {
-                                unsubscribeMutation.mutate(subscription.id);
+                              if (isSubscribed) {
+                                if (
+                                  window.confirm('구독을 취소하시겠습니까?')
+                                ) {
+                                  unsubscribeMutation.mutate(subscription.id);
+                                }
+                              } else {
+                                if (
+                                  window.confirm(
+                                    '이 게시판을 구독하시겠습니까?'
+                                  )
+                                ) {
+                                  subscribeMutation.mutate(article.board.id);
+                                }
                               }
-                            } else {
-                              if (
-                                window.confirm('이 게시판을 구독하시겠습니까?')
-                              ) {
-                                subscribeMutation.mutate(article.board.id);
-                              }
-                            }
-                          }}
-                          role="button"
-                        >
-                          {isSubscribed ? '✔ 구독중' : '구독'}
-                        </span>
-                      );
-                    })()}
-                  {user && (
-                    <span
-                      className={`${styles.bookmarkTag} ${
-                        bookmarkedIds.has(article.id)
-                          ? styles.bookmarkActive
-                          : ''
-                      }`}
-                      onClick={(e) => handleBookmarkToggle(e, article.id)}
-                      role="button"
-                      title={
-                        bookmarkedIds.has(article.id) ? '북마크 해제' : '북마크'
-                      }
-                    >
-                      {bookmarkedIds.has(article.id) ? (
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
-                        </svg>
-                      ) : (
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
-                        </svg>
-                      )}
+                            }}
+                            role="button"
+                          >
+                            {isSubscribed ? '✔ 구독중' : '구독'}
+                          </span>
+                        );
+                      })()}
+                    {user && (
+                      <span
+                        className={`${styles.bookmarkTag} ${
+                          bookmarkedIds.has(article.id)
+                            ? styles.bookmarkActive
+                            : ''
+                        }`}
+                        onClick={(e) => handleBookmarkToggle(e, article.id)}
+                        role="button"
+                        title={
+                          bookmarkedIds.has(article.id)
+                            ? '북마크 해제'
+                            : '북마크'
+                        }
+                      >
+                        {bookmarkedIds.has(article.id) ? (
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
+                          </svg>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles.articleTitle}>{article.title}</div>
+                  <div className={styles.articleMeta}>
+                    <span>{article.author}</span>
+                    <span className={styles.separator}>|</span>
+                    <span>
+                      {new Date(article.publishedAt).toLocaleString()}
                     </span>
-                  )}
+                  </div>
                 </div>
-                <div className={styles.articleTitle}>{article.title}</div>
-                <div className={styles.articleMeta}>
-                  <span>{article.author}</span>
-                  <span className={styles.separator}>|</span>
-                  <span>{new Date(article.publishedAt).toLocaleString()}</span>
+                {/* Right Side: View Count */}
+                <div className={styles.itemSide}>
+                  <ArticleItemStats
+                    articleId={article.id}
+                    likeCount={article.likes}
+                    dislikeCount={article.dislikes}
+                    isLiked={!!article.isLiked}
+                    isDisliked={!!article.isDisliked}
+                  />
+                  <div className={styles.viewCount} title="조회수">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <span>{article.views?.toLocaleString() || 0}</span>
+                  </div>
                 </div>
               </Link>
             ))}

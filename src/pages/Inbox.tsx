@@ -6,9 +6,8 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getArticles } from '../apis/articleApi';
 import {
   getBoards,
   getMySubscriptions,
@@ -26,15 +25,13 @@ const Inbox = () => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   // Bookmark State & Logic
-  // Fetch existing bookmarks to determine initial state 'isBookmarked' for filtered items
-  // Ideally backend should return `isBookmarked` on the article object, but if not we can derive it.
   const { data: bookmarkedArticles = [] } = useQuery({
     queryKey: ['bookmarks'],
     queryFn: getBookmarks,
     enabled: !!user,
   });
 
-  // Fetch My Subscriptions (Moved Up)
+  // Fetch My Subscriptions
   const { data: subscriptions = [] } = useQuery({
     queryKey: ['subscriptions', user?.id],
     queryFn: getMySubscriptions,
@@ -66,26 +63,6 @@ const Inbox = () => {
           if (found) {
             articleToAdd = found;
             break;
-          }
-        }
-      }
-
-      // If not found in Inbox, check History (Mock) cache
-      if (!articleToAdd) {
-        // Reconstruct the key logic used in useQuery, or search broadly
-        // Since we can't easily replicate dynamic keys inside onMutate without props,
-        // we'll try to find any 'inbox-history' query.
-        const historyQueries = queryClient.getQueriesData<ArticleListResponse>({
-          queryKey: ['inbox-history'],
-        });
-
-        for (const [_, data] of historyQueries) {
-          if (data?.data) {
-            const found = data.data.find((msg) => msg.id === newBookmarkId);
-            if (found) {
-              articleToAdd = found;
-              break;
-            }
           }
         }
       }
@@ -190,7 +167,7 @@ const Inbox = () => {
   });
 
   // 1. Fetch Inboxes (Notifications) with Pagination
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
     useInfiniteQuery<
       ArticleListResponse,
       Error,
@@ -205,7 +182,10 @@ const Inbox = () => {
         nextPublishedAt?: number;
         nextId?: number;
       },
-      getNextPageParam: (lastPage) => {
+      getNextPageParam: (lastPage: any) => {
+        // If response is array (mock/legacy), no next page
+        if (Array.isArray(lastPage) || !lastPage.paging) return undefined;
+        
         if (!lastPage.paging.hasNext) return undefined;
         return {
           nextPublishedAt: lastPage.paging.nextPublishedAt,
@@ -216,93 +196,23 @@ const Inbox = () => {
       enabled: !!user,
     });
 
-  // Calculate Subscribed Board IDs
-  const subscribedBoardIds = subscriptions.map((s) => s.boardId);
-
-  // 2. Fetch 10 Recent Articles (History) for Design Review
-  const { data: historyData } = useQuery({
-    queryKey: ['inbox-history', user?.id, subscribedBoardIds.join(',')],
-    queryFn: () =>
-      getArticles({
-        boardIds:
-          subscribedBoardIds.length > 0
-            ? subscribedBoardIds.join(',')
-            : undefined,
-        limit: 10,
-      }),
-    enabled: !!user,
-  });
-
   // Pagination State
   const [pageIndex, setPageIndex] = useState(0);
 
-  // Interaction State for Mock Items (History) - Persisted in SessionStorage
-  const [mockReadIds, setMockReadIds] = useState<Set<number>>(() => {
-    try {
-      const saved = sessionStorage.getItem('inbox_mock_read');
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
-  const [mockDeletedIds, setMockDeletedIds] = useState<Set<number>>(() => {
-    try {
-      const saved = sessionStorage.getItem('inbox_mock_deleted');
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
+  // Handle both array (legacy/mock style) and object (standard API style) response formats
+  const rawPageData = data?.pages?.[pageIndex];
+  const pageItems = Array.isArray(rawPageData) 
+    ? rawPageData 
+    : (rawPageData?.data || []);
 
-  // Sync Mock State to SessionStorage
-  useEffect(() => {
-    sessionStorage.setItem(
-      'inbox_mock_read',
-      JSON.stringify(Array.from(mockReadIds))
-    );
-  }, [mockReadIds]);
-
-  useEffect(() => {
-    sessionStorage.setItem(
-      'inbox_mock_deleted',
-      JSON.stringify(Array.from(mockDeletedIds))
-    );
-  }, [mockDeletedIds]);
-
-  // Merge Logic
-  const inboxPageData =
-    (data?.pages?.[pageIndex]?.data || []).map((item) => ({
+  const inboxMessages =
+    pageItems.map((item: Article) => ({
       ...item,
       isInbox: true,
     })) || [];
 
-  const historyPageData = (historyData?.data || [])
-    .filter((item) => !mockDeletedIds.has(item.id))
-    .map((item) => ({
-      ...item,
-      isInbox: true, // Visualize as Inbox
-      isRead: mockReadIds.has(item.id), // Visualize Read status based on local state
-      isMock: true, // Flag as mock item
-    }));
-
-  // Combine: Inbox first, then History (deduplicated)
-  const combinedMap = new Map();
-  // Add history first
-  historyPageData.forEach((item) => combinedMap.set(item.id, item));
-  // Add inbox (overwrites history if duplicate exists, ensuring isInbox: true permissions)
-  inboxPageData.forEach((item) => combinedMap.set(item.id, item));
-
-  // Convert to array and sort by publishedAt desc
-  const inboxMessages = Array.from(combinedMap.values()).sort(
-    (a, b) =>
-      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-  );
-
   const handleNextPage = () => {
-    if (
-      pageIndex < (data?.pages.length || 0) - 1 ||
-      pageIndex < ((historyData?.data || []).length > 0 ? 0 : -1)
-    ) {
+    if (pageIndex < (data?.pages.length || 0) - 1) {
       setPageIndex(pageIndex + 1);
     } else if (hasNextPage) {
       fetchNextPage().then(() => setPageIndex(pageIndex + 1));
@@ -362,20 +272,11 @@ const Inbox = () => {
     },
   });
 
-  const handleDelete = (e: React.MouseEvent, id: number, isMock?: boolean) => {
+  const handleDelete = (e: React.MouseEvent, id: number) => {
     e.preventDefault(); // Prevent Link navigation
     e.stopPropagation();
     if (window.confirm('정말 삭제하시겠습니까?')) {
-      if (isMock) {
-        setMockDeletedIds((prev) => {
-          const next = new Set(prev);
-          next.add(id);
-          return next;
-        });
-        alert('삭제되었습니다.');
-      } else {
-        deleteMutation.mutate(id);
-      }
+      deleteMutation.mutate(id);
     }
   };
 
@@ -383,10 +284,12 @@ const Inbox = () => {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
-  const filteredMessages = inboxMessages.filter(
-    (msg) => msg && msg.board && !inactiveBoardIds.has(msg.board.id)
-  );
-
+  const filteredMessages = inboxMessages.filter((msg) => {
+    if (!msg) return false;
+    // If board is missing, we can't filter by board ID, so just show it.
+    if (!msg.board) return true;
+    return !inactiveBoardIds.has(msg.board.id);
+  });
   const toggleSelectionMode = () => {
     setIsSelectionMode((prev) => !prev);
     setSelectedIds(new Set()); // Clear selection when toggling
@@ -414,38 +317,12 @@ const Inbox = () => {
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
 
-    // Separate Mock vs Real items
-    const selectedMessages = filteredMessages.filter((m) =>
-      selectedIds.has(m.id)
-    );
-    const mockIdsToDelete = selectedMessages
-      .filter((m) => (m as Article & { isMock?: boolean }).isMock)
-      .map((m) => m.id);
-    const realIdsToDelete = selectedMessages
-      .filter((m) => m.isInbox && !(m as Article & { isMock?: boolean }).isMock)
-      .map((m) => m.id);
-
-    if (mockIdsToDelete.length === 0 && realIdsToDelete.length === 0) {
-      alert('삭제할 수 있는 메시지가 선택되지 않았습니다.');
-      return;
-    }
+    const idsToDelete = Array.from(selectedIds);
 
     if (window.confirm(`${selectedIds.size}개의 메시지를 삭제하시겠습니까?`)) {
       try {
-        // 1. Handle Real Deletes
-        if (realIdsToDelete.length > 0) {
-          await Promise.all(realIdsToDelete.map((id) => deleteInbox(id)));
-          queryClient.invalidateQueries({ queryKey: ['inbox'] });
-        }
-
-        // 2. Handle Mock Deletes
-        if (mockIdsToDelete.length > 0) {
-          setMockDeletedIds((prev) => {
-            const next = new Set(prev);
-            mockIdsToDelete.forEach((id) => next.add(id));
-            return next;
-          });
-        }
+        await Promise.all(idsToDelete.map((id) => deleteInbox(id)));
+        queryClient.invalidateQueries({ queryKey: ['inbox'] });
 
         setSelectedIds(new Set());
         setIsSelectionMode(false);
@@ -473,36 +350,20 @@ const Inbox = () => {
 
   const handleRead = (
     e: React.MouseEvent,
-    article: Article & { isInbox?: boolean; isMock?: boolean }
+    article: Article & { isInbox?: boolean }
   ) => {
     // Prevent default link navigation to handle logic first
     e.preventDefault();
     if (isSelectionMode) return;
 
-    // Handle Mock Read
-    if (article.isMock) {
-      if (!article.isRead) {
-        setMockReadIds((prev) => {
-          const next = new Set(prev);
-          next.add(article.id);
-          // Sync immediately to session storage to ensure persistence across navigation
-          sessionStorage.setItem(
-            'inbox_mock_read',
-            JSON.stringify(Array.from(next))
-          );
-          return next;
-        });
-      }
-    }
     // Only mark as read if it's an Inbox item and currently unread
-    else if (article.isInbox && !article.isRead) {
+    if (article.isInbox && !article.isRead) {
       readMutation.mutate(article.id);
     }
 
     // Navigate programmatically passing the state
     navigate(`/article/${article.id}`, {
       state: {
-        isMock: article.isMock,
         isInbox: article.isInbox,
       },
     });
@@ -627,7 +488,11 @@ const Inbox = () => {
 
         {/* Right: Message List */}
         <div className={styles.notificationList}>
-          {filteredMessages.length > 0 ? (
+          {isLoading && <p className={styles.loading}>로딩 중...</p>}
+          {isError && <p className={styles.error}>메시지를 불러오는데 실패했습니다.</p>}
+          
+          {!isLoading && !isError && (
+            filteredMessages.length > 0 ? (
             <>
               {filteredMessages.map((article) => (
                 <div
@@ -736,8 +601,7 @@ const Inbox = () => {
                           onClick={(e) =>
                             handleDelete(
                               e,
-                              article.id,
-                              (article as Article & { isMock?: boolean }).isMock
+                              article.id
                             )
                           }
                           role="button"
@@ -780,7 +644,7 @@ const Inbox = () => {
                 ? '수신함이 비어있습니다.'
                 : '선택된 게시판의 메시지가 없습니다.'}
             </p>
-          )}
+          ))}
 
           {/* Pagination Controls */}
           {/* Show even if empty list if user requested "show 1 when no messages" */}

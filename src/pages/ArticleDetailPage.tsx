@@ -15,6 +15,7 @@ import { deleteInbox } from '../apis/inboxApi';
 import { useUserStore } from '../store/useUserStore';
 import styles from './ArticleDetailPage.module.css';
 import NotFoundPage from './NotFoundPage';
+import ArticleItemStats from '../components/ArticleItemStats';
 
 const ArticleDetailPage = () => {
   const { articleId } = useParams<{ articleId: string }>();
@@ -220,6 +221,7 @@ const ArticleDetailPage = () => {
       </button>
 
       <div className={styles.articleHeader}>
+
         <div className={styles.boardName}>
           [{article.board.name}]
           {user &&
@@ -292,7 +294,7 @@ const ArticleDetailPage = () => {
                     )}
                   </span>
                   {/* Delete Icon (Trash) - Only show if it is an inbox item (real or mock) */}
-                  {(isInbox !== false || isMock) && (
+                  {(isInbox || isMock) && (
                     <span
                       className={styles.bookmarkTag} // Reuse bookmark tag styles for consistency
                       onClick={handleDelete}
@@ -326,6 +328,40 @@ const ArticleDetailPage = () => {
           <span className={styles.date}>
             {new Date(article.publishedAt).toLocaleDateString()}
           </span>
+          {article.originLink && (
+            <a
+              href={article.originLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.originLinkHeader}
+            >
+              {article.originLink}
+            </a>
+          )}
+          <span className={styles.separator} style={{ margin: '0 8px', color: '#ddd' }}>|</span>
+          <ArticleItemStats
+            articleId={article.id}
+            likeCount={article.likes || 0}
+            dislikeCount={article.dislikes || 0}
+            isLiked={!!article.isLiked}
+            isDisliked={!!article.isDisliked}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem', color: '#888' }} title="조회수">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span>{article.views?.toLocaleString() || 0}</span>
+          </div>
           {user && (
             <div className={styles.buttonGroup}>
               <button onClick={handleEdit} className={styles.editButton}>
