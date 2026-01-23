@@ -16,8 +16,14 @@ import {
 } from '../apis/boardApi';
 import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
 import { deleteInbox, getInboxes, readInbox } from '../apis/inboxApi';
+import ArticleItemStats from '../components/ArticleItemStats';
 import { useUserStore } from '../store/useUserStore';
-import type { Article, ArticleListResponse } from '../types/article';
+import type {
+  Article,
+  ArticleListResponse,
+  InboxItem,
+  InboxResponse,
+} from '../types/article';
 import styles from './Inbox.module.css';
 
 const Inbox = () => {
@@ -167,48 +173,53 @@ const Inbox = () => {
   });
 
   // 1. Fetch Inboxes (Notifications) with Pagination
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } =
-    useInfiniteQuery<
-      ArticleListResponse,
-      Error,
-      InfiniteData<ArticleListResponse>,
-      (string | number | undefined)[],
-      { limit: number; nextPublishedAt?: number; nextId?: number }
-    >({
-      queryKey: ['inbox', user?.id],
-      queryFn: ({ pageParam }) => getInboxes({ ...pageParam, limit: 15 }),
-      initialPageParam: { limit: 15 } as {
-        limit: number;
-        nextPublishedAt?: number;
-        nextId?: number;
-      },
-      getNextPageParam: (lastPage: any) => {
-        // If response is array (mock/legacy), no next page
-        if (Array.isArray(lastPage) || !lastPage.paging) return undefined;
-        
-        if (!lastPage.paging.hasNext) return undefined;
-        return {
-          nextPublishedAt: lastPage.paging.nextPublishedAt,
-          nextId: lastPage.paging.nextId,
-          limit: 15,
-        };
-      },
-      enabled: !!user,
-    });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = useInfiniteQuery<
+    InboxResponse,
+    Error,
+    InfiniteData<InboxResponse>,
+    (string | number | undefined)[],
+    { limit: number; nextPublishedAt?: number; nextId?: number }
+  >({
+    queryKey: ['inbox', user?.id],
+    queryFn: ({ pageParam }) => getInboxes({ ...pageParam, limit: 15 }),
+    initialPageParam: { limit: 15 } as {
+      limit: number;
+      nextPublishedAt?: number;
+      nextId?: number;
+    },
+    getNextPageParam: (_) => {
+      // Current API response doesn't show paging support in the JSON snippet provided.
+      // If pagination is needed later, we check lastPage.paging.
+      // For now, assuming single page or no standard paging field in response.
+      return undefined;
+    },
+    enabled: !!user,
+  });
 
   // Pagination State
   const [pageIndex, setPageIndex] = useState(0);
 
-  // Handle both array (legacy/mock style) and object (standard API style) response formats
+  // Parse InboxResponse
   const rawPageData = data?.pages?.[pageIndex];
-  const pageItems = Array.isArray(rawPageData) 
-    ? rawPageData 
-    : (rawPageData?.data || []);
+  const inboxItems: InboxItem[] = rawPageData?.inboxes || [];
 
+  // We need to extend Article to include the inboxId, which is crucial for
+  // inbox-specific actions like "read" and "delete".
+  // The 'id' field remains the Article ID for compatibility with shared components.
   const inboxMessages =
-    pageItems.map((item: Article) => ({
-      ...item,
+    inboxItems.map((item) => ({
+      ...item.article,
+      id: item.article.id, // Explicitly keep Access ID as 'id'
+      inboxId: item.id, // Store Inbox ID securely
       isInbox: true,
+      isRead: item.isRead,
     })) || [];
 
   const handleNextPage = () => {
@@ -338,11 +349,39 @@ const Inbox = () => {
   // Read Mutation
   const readMutation = useMutation({
     mutationFn: (id: number) => readInbox(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inbox'] });
+    onMutate: async (id) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['inbox', user?.id] });
+
+      // Snapshot the previous value
+      const previousInbox = queryClient.getQueryData(['inbox', user?.id]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData<InfiniteData<InboxResponse>>(
+        ['inbox', user?.id],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              inboxes: page.inboxes.map((item) =>
+                item.id === id ? { ...item, isRead: true } : item
+              ),
+            })),
+          };
+        }
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousInbox };
     },
-    onError: (error) => {
-      console.error('Failed to mark as read', error);
+    onError: (err, _, context) => {
+      queryClient.setQueryData(['inbox', user?.id], context?.previousInbox);
+      console.error('Failed to mark as read', err);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['inbox'] });
     },
   });
 
@@ -350,15 +389,15 @@ const Inbox = () => {
 
   const handleRead = (
     e: React.MouseEvent,
-    article: Article & { isInbox?: boolean }
+    article: Article & { isInbox?: boolean; inboxId?: number }
   ) => {
     // Prevent default link navigation to handle logic first
     e.preventDefault();
     if (isSelectionMode) return;
 
     // Only mark as read if it's an Inbox item and currently unread
-    if (article.isInbox && !article.isRead) {
-      readMutation.mutate(article.id);
+    if (article.isInbox && !article.isRead && article.inboxId) {
+      readMutation.mutate(article.inboxId);
     }
 
     // Navigate programmatically passing the state
@@ -489,124 +528,170 @@ const Inbox = () => {
         {/* Right: Message List */}
         <div className={styles.notificationList}>
           {isLoading && <p className={styles.loading}>로딩 중...</p>}
-          {isError && <p className={styles.error}>메시지를 불러오는데 실패했습니다.</p>}
-          
-          {!isLoading && !isError && (
-            filteredMessages.length > 0 ? (
-            <>
-              {filteredMessages.map((article) => (
-                <div
-                  key={article.id}
-                  className={styles.itemWrapper}
-                  style={{ position: 'relative' }}
-                >
-                  {isSelectionMode && (
-                    <div
-                      className={styles.checkboxArea}
-                      onClick={(e) => handleSelect(e, article.id)}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(article.id)}
-                        readOnly
-                        style={{ pointerEvents: 'none' }}
-                      />
-                    </div>
-                  )}
-                  <Link
-                    to={`/article/${article.id}`}
-                    state={{
-                      isMock: (article as Article & { isMock?: boolean })
-                        .isMock,
-                      isInbox: article.isInbox,
-                    }}
-                    className={`${styles.notificationItem} ${!article.isRead ? styles.unread : ''}`}
-                    style={{
-                      textDecoration: 'none',
-                      display: 'block',
-                      paddingRight: '48px',
-                    }}
-                    onClick={(e) => handleRead(e, article)}
+          {isError && (
+            <p className={styles.error}>메시지를 불러오는데 실패했습니다.</p>
+          )}
+
+          {!isLoading &&
+            !isError &&
+            (filteredMessages.length > 0 ? (
+              <>
+                {filteredMessages.map((article) => (
+                  <div
+                    key={article.inboxId || article.id}
+                    className={`${styles.itemWrapper} ${!article.isRead ? styles.unread : ''}`}
+                    style={{ position: 'relative' }}
                   >
-                    <div className={styles.headerRow}>
-                      <div className={styles.itemCategory}>
-                        [{article.board?.name || 'Unknown Board'}]
-                      </div>
-                      <span
-                        className={`${styles.subscribeTag} ${subscriptions.some((s) => s.boardId === article.board?.id) ? styles.active : ''}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const sub = subscriptions.find(
-                            (s) => s.boardId === article.board?.id
-                          );
-                          if (sub) {
-                            if (
-                              window.confirm('정말 구독을 취소하시겠습니까?')
-                            ) {
-                              unsubscribeMutation.mutate(sub.id);
-                            }
-                          } else if (article.board?.id) {
-                            subscribeMutation.mutate(article.board.id);
-                          }
-                        }}
-                        role="button"
-                      >
-                        {subscriptions.some(
-                          (s) => s.boardId === article.board?.id
-                        )
-                          ? '✓ 구독중'
-                          : '구독'}
-                      </span>
-                      <span
-                        className={`${styles.bookmarkTag} ${bookmarkedIds.has(article.id) ? styles.active : ''}`}
-                        onClick={(e) => handleBookmarkToggle(e, article.id)}
-                        role="button"
-                        title={
-                          bookmarkedIds.has(article.id)
-                            ? '북마크 해제'
-                            : '북마크'
+                    {isSelectionMode && (
+                      <div
+                        className={styles.checkboxArea}
+                        onClick={(e) =>
+                          handleSelect(e, article.inboxId || article.id)
                         }
                       >
-                        {bookmarkedIds.has(article.id) ? (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            xmlns="http://www.w3.org/2000/svg"
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(
+                            article.inboxId || article.id
+                          )}
+                          readOnly
+                          style={{ pointerEvents: 'none' }}
+                        />
+                      </div>
+                    )}
+                    <Link
+                      to={`/article/${article.id}`}
+                      state={{
+                        isMock: (article as Article & { isMock?: boolean })
+                          .isMock,
+                        isInbox: article.isInbox,
+                      }}
+                      className={styles.notificationItem}
+                      onClick={(e) => handleRead(e, article)}
+                    >
+                      <div className={styles.itemContent}>
+                        <div className={styles.headerRow}>
+                          <div className={styles.itemCategory}>
+                            [{article.board?.name || 'Unknown Board'}]
+                          </div>
+                          <span
+                            className={`${styles.subscribeTag} ${subscriptions.some((s) => s.boardId === article.board?.id) ? styles.active : ''}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const sub = subscriptions.find(
+                                (s) => s.boardId === article.board?.id
+                              );
+                              if (sub) {
+                                if (
+                                  window.confirm(
+                                    '정말 구독을 취소하시겠습니까?'
+                                  )
+                                ) {
+                                  unsubscribeMutation.mutate(sub.id);
+                                }
+                              } else if (article.board?.id) {
+                                subscribeMutation.mutate(article.board.id);
+                              }
+                            }}
+                            role="button"
                           >
-                            <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
-                          </svg>
-                        ) : (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
-                          </svg>
-                        )}
-                      </span>
-                      {/* Delete Icon (Trash) - Only for Inbox items */}
-                      {article.isInbox !== false && (
-                        <span
-                          className={styles.deleteTag}
-                          onClick={(e) =>
-                            handleDelete(
-                              e,
-                              article.id
+                            {subscriptions.some(
+                              (s) => s.boardId === article.board?.id
                             )
-                          }
-                          role="button"
-                          title="삭제"
+                              ? '✓ 구독중'
+                              : '구독'}
+                          </span>
+                          <span
+                            className={`${styles.bookmarkTag} ${bookmarkedIds.has(article.id) ? styles.active : ''}`}
+                            onClick={(e) => handleBookmarkToggle(e, article.id)}
+                            role="button"
+                            title={
+                              bookmarkedIds.has(article.id)
+                                ? '북마크 해제'
+                                : '북마크'
+                            }
+                          >
+                            {bookmarkedIds.has(article.id) ? (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
+                              </svg>
+                            ) : (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
+                              </svg>
+                            )}
+                          </span>
+                          {/* Delete Icon (Trash) - Only for Inbox items */}
+                          {article.isInbox !== false && article.inboxId && (
+                            <span
+                              className={styles.deleteTag}
+                              onClick={(e) => handleDelete(e, article.inboxId)}
+                              role="button"
+                              title="삭제"
+                            >
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2" />
+                              </svg>
+                            </span>
+                          )}
+                        </div>
+                        <div className={styles.itemTitle}>{article.title}</div>
+                        <div className={styles.itemFooter}>
+                          <span className={styles.itemSender}>
+                            {article.author}
+                          </span>
+                          <span className={styles.divider}>|</span>
+                          <span className={styles.itemDate}>
+                            {new Date(article.publishedAt).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right Side: Stats */}
+                      <div className={styles.itemSide}>
+                        <div
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
                         >
+                          <ArticleItemStats
+                            articleId={article.id}
+                            likeCount={article.likes}
+                            dislikeCount={article.dislikes}
+                            isLiked={article.isLiked}
+                            isDisliked={article.isDisliked}
+                          />
+                        </div>
+                        <div className={styles.viewCount} title="조회수">
                           <svg
                             width="16"
                             height="16"
@@ -616,35 +701,24 @@ const Inbox = () => {
                             strokeWidth="2"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            xmlns="http://www.w3.org/2000/svg"
                           >
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2" />
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
                           </svg>
-                        </span>
-                      )}
-                    </div>
-                    <div className={styles.itemTitle}>{article.title}</div>
-                    <div className={styles.itemFooter}>
-                      <span className={styles.itemSender}>
-                        {article.author}
-                      </span>
-                      <span className={styles.divider}>|</span>
-                      <span className={styles.itemDate}>
-                        {new Date(article.publishedAt).toLocaleString()}
-                      </span>
-                    </div>
-                  </Link>
-                </div>
-              ))}
-            </>
-          ) : (
-            <p className={styles.emptyNotice}>
-              {inboxMessages.length === 0
-                ? '수신함이 비어있습니다.'
-                : '선택된 게시판의 메시지가 없습니다.'}
-            </p>
-          ))}
+                          <span>{article.views?.toLocaleString() || 0}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <p className={styles.emptyNotice}>
+                {inboxMessages.length === 0
+                  ? '수신함이 비어있습니다.'
+                  : '선택된 게시판의 메시지가 없습니다.'}
+              </p>
+            ))}
 
           {/* Pagination Controls */}
           {/* Show even if empty list if user requested "show 1 when no messages" */}

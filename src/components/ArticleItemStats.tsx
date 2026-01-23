@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import type { AxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import {
   dislikeArticle,
@@ -91,7 +93,7 @@ const ArticleItemStats = ({
         setHasDisliked(false);
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Like Failed', error);
       // On error, invalidate to ensure we are in sync with server
       queryClient.invalidateQueries({ queryKey: ['articles'] });
@@ -99,9 +101,9 @@ const ArticleItemStats = ({
       queryClient.invalidateQueries({ queryKey: ['isLiked', articleId] });
       queryClient.invalidateQueries({ queryKey: ['isDisliked', articleId] });
       setHasLiked(false);
-      
+
       if (error.response?.status === 409) {
-          setHasLiked(true);
+        setHasLiked(true);
       }
     },
     onSettled: () => {
@@ -138,7 +140,7 @@ const ArticleItemStats = ({
         setHasLiked(false);
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Dislike Failed', error);
       queryClient.invalidateQueries({ queryKey: ['articles'] });
       queryClient.invalidateQueries({ queryKey: ['article', articleId] });
@@ -147,7 +149,7 @@ const ArticleItemStats = ({
       setHasDisliked(false);
 
       if (error.response?.status === 409) {
-          setHasDisliked(true);
+        setHasDisliked(true);
       }
     },
     onSettled: () => {

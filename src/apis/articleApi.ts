@@ -1,3 +1,4 @@
+import type { AxiosError } from 'axios';
 import type {
   Article,
   ArticleFilterParams,
@@ -42,8 +43,9 @@ export const getArticleLikes = async (articleId: number): Promise<boolean> => {
   try {
     await api.get(`/v1/likes/${articleId}`);
     return true;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
+  } catch (error) {
+    const err = error as AxiosError;
+    if (err.response?.status === 404) {
       return false;
     }
     throw error;
@@ -56,8 +58,9 @@ export const getArticleDislikes = async (
   try {
     await api.get(`/v1/dislikes/${articleId}`);
     return true;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
+  } catch (error) {
+    const err = error as AxiosError;
+    if (err.response?.status === 404) {
       return false;
     }
     throw error;

@@ -25,9 +25,9 @@ import {
   unsubscribeBoard,
 } from '../apis/boardApi';
 import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
+import ArticleItemStats from '../components/ArticleItemStats';
 import { useUserStore } from '../store/useUserStore';
 import type { Article, ArticleListResponse } from '../types/article';
-import ArticleItemStats from '../components/ArticleItemStats';
 import styles from './HomePage.module.css';
 
 const HomePage = () => {
