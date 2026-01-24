@@ -39,6 +39,10 @@ export const getArticleDetail = async (articleId: number): Promise<Article> => {
   return response.data;
 };
 
+export const deleteArticle = async (articleId: number): Promise<void> => {
+  await api.delete(`/v1/articles/${articleId}`);
+};
+
 export const getArticleLikes = async (articleId: number): Promise<boolean> => {
   try {
     await api.get(`/v1/likes/${articleId}`);
