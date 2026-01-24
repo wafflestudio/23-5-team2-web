@@ -1,5 +1,5 @@
+import { useUserStore } from '@/store/useUserStore';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useUserStore } from '../store/useUserStore';
 
 const ProtectedRoute = () => {
   const { user, isLoading } = useUserStore();

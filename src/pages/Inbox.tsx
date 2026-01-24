@@ -1,4 +1,16 @@
 import {
+  getBoards,
+  getMySubscriptions,
+  subscribeBoard,
+  unsubscribeBoard,
+} from '@/apis/boardApi';
+import { addBookmark, getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
+import { deleteInbox, getInboxes, readInbox } from '@/apis/inboxApi';
+import ArticleItemStats from '@/components/article/ArticleItemStats';
+import { useUserStore } from '@/store/useUserStore';
+import type { Article, ArticleListResponse } from '@/types/article';
+import type { InboxItem, InboxResponse } from '@/types/inbox';
+import {
   type InfiniteData,
   useInfiniteQuery,
   useMutation,
@@ -8,22 +20,6 @@ import {
 import { AxiosError } from 'axios';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  getBoards,
-  getMySubscriptions,
-  subscribeBoard,
-  unsubscribeBoard,
-} from '../apis/boardApi';
-import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
-import { deleteInbox, getInboxes, readInbox } from '../apis/inboxApi';
-import ArticleItemStats from '../components/ArticleItemStats';
-import { useUserStore } from '../store/useUserStore';
-import type {
-  Article,
-  ArticleListResponse,
-  InboxItem,
-  InboxResponse,
-} from '../types/article';
 import styles from './Inbox.module.css';
 
 const Inbox = () => {

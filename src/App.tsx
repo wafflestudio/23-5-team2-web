@@ -1,9 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 import './style.css';
 import { useEffect } from 'react';
-import Footer from './components/Footer';
-import Header from './components/Header';
-import ProtectedRoute from './components/ProtectedRoute';
+import Footer from './components/common/Footer';
+import Header from './components/common/Header';
+import ProtectedRoute from './components/common/ProtectedRoute';
 import ArticleDetailPage from './pages/ArticleDetailPage';
 import BookmarkPage from './pages/BookmarkPage';
 import CreateArticlePage from './pages/CreateArticlePage';

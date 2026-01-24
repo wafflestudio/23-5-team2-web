@@ -1,21 +1,21 @@
 // pages/ArticleDetailPage.tsx
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
-import DOMPurify from 'dompurify';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { deleteArticle, getArticleDetail } from '../apis/articleApi';
+import { deleteArticle, getArticleDetail } from '@/apis/articleApi';
 import {
   type Subscription,
   getMySubscriptions,
   subscribeBoard,
   unsubscribeBoard,
-} from '../apis/boardApi';
-import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
-import { deleteInbox } from '../apis/inboxApi';
-import ArticleItemStats from '../components/ArticleItemStats';
-import { useUserStore } from '../store/useUserStore';
-import type { Article } from '../types/article';
+} from '@/apis/boardApi';
+import { addBookmark, getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
+import { deleteInbox } from '@/apis/inboxApi';
+import ArticleItemStats from '@/components/article/ArticleItemStats';
+import { useUserStore } from '@/store/useUserStore';
+import type { Article } from '@/types/article';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import DOMPurify from 'dompurify';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import styles from './ArticleDetailPage.module.css';
 import NotFoundPage from './NotFoundPage';
 

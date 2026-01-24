@@ -1,8 +1,8 @@
+import { authApi } from '@/apis/authApi';
+import { useUserStore } from '@/store/useUserStore';
 // components/Header.tsx
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
-import { authApi } from '../apis/authApi';
-import { useUserStore } from '../store/useUserStore';
 import styles from './Header.module.css';
 
 const Header = () => {

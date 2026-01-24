@@ -1,0 +1,127 @@
+/* Unified EmailSection Styles */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Top spacing to match other sections, standardized padding */
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+  width: 100%;
+}
+
+/* Title matching MyPage label font specs */
+.title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.inputGroup {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc; /* Matched MyPage input border */
+  border-radius: 4px;
+  font-size: 1rem; /* Matched font size */
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgb(72, 65, 155);
+}
+
+.addButton {
+  padding: 0 20px;
+  background-color: rgb(72, 65, 155);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  /* Ensure height matches input roughly (input=~40px with padding) */
+  height: 40px;
+  font-size: 1rem;
+}
+
+.addButton:hover {
+  background-color: rgb(60, 54, 130);
+}
+
+.addButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.emailList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.emailItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+.emailText {
+  color: #555;
+  font-size: 1rem; /* Standardized text size */
+}
+
+.deleteButton {
+  padding: 4px 8px;
+  background-color: transparent;
+  color: #999;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deleteButton:hover {
+  background-color: #ffeaea;
+  color: #d32f2f;
+  border-color: #d32f2f;
+}
+
+.emptyMessage {
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+  padding: 20px 0;
+  background-color: #fcfcfc;
+  border-radius: 4px;
+}
+
+.errorMessage {
+  color: #d32f2f;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}

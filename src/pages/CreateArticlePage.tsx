@@ -1,15 +1,17 @@
-// pages/CreateArticlePage.tsx
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { marked } from 'marked';
-import React, { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   createArticle,
   getArticleDetail,
   updateArticle,
-} from '../apis/articleApi';
-import { uploadImage } from '../apis/imageApi';
-import type { CreateArticleRequest } from '../types/article';
+} from '@/apis/articleApi';
+import { uploadImage } from '@/apis/imageApi';
+import type { CreateArticleRequest } from '@/types/article';
+// pages/CreateArticlePage.tsx
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { marked } from 'marked';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import TurndownService from 'turndown';
+import { gfm } from 'turndown-plugin-gfm';
 import styles from './CreateArticlePage.module.css';
 
 type Tab = 'write' | 'preview';
@@ -24,12 +26,13 @@ const CreateArticlePage = () => {
   // Form State
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [content, setContent] = useState(''); // Markdown content
+  const [content, setContent] = useState(''); // Markdown or HTML depending on mode
   const [originLink, setOriginLink] = useState<string | null>(null);
 
   // Editor State
   const [activeTab, setActiveTab] = useState<Tab>('write');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [previewHtml, setPreviewHtml] = useState('');
 
   // Fetch Article for Edit Mode
   const { data: article } = useQuery({
@@ -38,30 +41,63 @@ const CreateArticlePage = () => {
     enabled: isEditMode,
   });
 
+  // Determine if we are in "Board 1 Mode" (Markdown) or "Other Mode" (HTML)
+  // Logic: New articles (Create Mode) default to Board 1 logic.
+  // Existing articles check board.id being 1.
+  const isBoard1 = !isEditMode || article?.board?.id === 1;
+
+  // Initialize Turndown Service
+  const turndownService = useMemo(() => {
+    const service = new TurndownService({
+      headingStyle: 'atx',
+      codeBlockStyle: 'fenced',
+    });
+    service.use(gfm);
+    return service;
+  }, []);
+
   // Populate data when article loads
   useEffect(() => {
     if (article) {
       setTitle(article.title);
       setAuthor(article.author || '');
       setOriginLink(article.originLink);
-      setContent(article.content);
-    }
-  }, [article]);
 
-  const [previewHtml, setPreviewHtml] = useState('');
+      // Condition: Is Board 1? -> Turn HTML to Markdown
+      if (article.board?.id === 1) {
+        // Safe conversion
+        try {
+          const markdown = turndownService.turndown(article.content);
+          setContent(markdown);
+        } catch (e) {
+          console.error('Turndown conversion failed', e);
+          setContent(article.content); // Fallback
+        }
+      } else {
+        // Other boards -> Raw HTML
+        setContent(article.content);
+      }
+    }
+  }, [article, turndownService]);
 
   // Update preview structure securely
   useEffect(() => {
-    const convertMarkdown = async () => {
-      try {
-        const html = await marked.parse(content, { breaks: true });
-        setPreviewHtml(html);
-      } catch (error) {
-        console.error('Markdown conversion failed:', error);
+    const updatePreview = async () => {
+      if (isBoard1) {
+        // If Board 1, content is Markdown -> Convert to HTML for preview
+        try {
+          const html = await marked.parse(content, { breaks: true });
+          setPreviewHtml(html);
+        } catch (error) {
+          console.error('Markdown conversion failed:', error);
+        }
+      } else {
+        // Other boards, content is HTML -> Use directly
+        setPreviewHtml(content);
       }
     };
-    convertMarkdown();
-  }, [content]);
+    updatePreview();
+  }, [content, isBoard1]);
 
   // Image Paste Handler
   const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -75,7 +111,15 @@ const CreateArticlePage = () => {
 
       try {
         const url = await uploadImage(file);
-        const imageMarkdown = `![image](${url})`;
+
+        let insertedText = '';
+        if (isBoard1) {
+          // Markdown image syntax
+          insertedText = `![image](${url})`;
+        } else {
+          // HTML image syntax
+          insertedText = `<img src="${url}" alt="image" />`;
+        }
 
         // Insert at cursor position
         const textarea = textareaRef.current;
@@ -84,7 +128,7 @@ const CreateArticlePage = () => {
         const text = textarea.value;
 
         const newText =
-          text.substring(0, start) + imageMarkdown + text.substring(end);
+          text.substring(0, start) + insertedText + text.substring(end);
 
         setContent(newText);
 
@@ -92,8 +136,8 @@ const CreateArticlePage = () => {
         setTimeout(() => {
           textarea.focus();
           textarea.setSelectionRange(
-            start + imageMarkdown.length,
-            start + imageMarkdown.length
+            start + insertedText.length,
+            start + insertedText.length
           );
         }, 0);
       } catch (err) {
@@ -140,18 +184,25 @@ const CreateArticlePage = () => {
       return;
     }
 
-    let htmlContent = '';
-    try {
-      htmlContent = await marked.parse(content, { breaks: true });
-    } catch (err) {
-      console.error('Markdown conversion failed on submit:', err);
-      htmlContent = content; // Fallback? or return
+    let finalContent = '';
+
+    if (isBoard1) {
+      // If Board 1, content is Markdown -> Convert to HTML for submit
+      try {
+        finalContent = await marked.parse(content, { breaks: true });
+      } catch (err) {
+        console.error('Markdown conversion failed on submit:', err);
+        finalContent = content; // Fallback
+      }
+    } else {
+      // If other boards, content is HTML -> Send raw
+      finalContent = content;
     }
 
     const currentAuthor = author.trim() === '' ? '관리자' : author;
     const payload = {
       title,
-      content: htmlContent,
+      content: finalContent,
       author: currentAuthor,
       originLink: originLink || null,
       publishedAt: article?.publishedAt || new Date().toISOString(),
@@ -207,9 +258,11 @@ const CreateArticlePage = () => {
           />
         </div>
 
-        {/* Markdown Editor Area */}
+        {/* Editor Area */}
         <div className={styles.formGroup}>
-          <label className={styles.label}>내용 (Markdown 지원)</label>
+          <label className={styles.label}>
+            {isBoard1 ? '내용 (Markdown 지원)' : '내용 (HTML 편집)'}
+          </label>
 
           <div className={styles.editorContainer}>
             <div className={styles.tabHeader}>
@@ -237,7 +290,11 @@ const CreateArticlePage = () => {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   onPaste={handlePaste}
-                  placeholder="# 내용을 입력하세요..."
+                  placeholder={
+                    isBoard1
+                      ? '# 내용을 입력하세요 (Markdown)...'
+                      : '<div>내용을 입력하세요 (HTML)...</div>'
+                  }
                 />
               ) : (
                 <div

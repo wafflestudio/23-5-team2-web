@@ -1,5 +1,6 @@
 // src/apis/auth.ts
-import type { AuthRequest, User } from '../types/auth';
+
+import type { AuthRequest, User } from '@/types/auth';
 import { api } from './instance';
 
 export const authApi = {

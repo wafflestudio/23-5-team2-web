@@ -322,6 +322,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mixmark-io/domino@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@mixmark-io/domino@npm:2.2.0"
+  checksum: 10c0/aa468a15f9217d425220fe6a4b3f9416cbe8e566ee14efc191c6d5cc04fe39338b16a90bbac190f28d44e69465db5f2cf95f479c621ce38060ca6b2a3d346e9d
+  languageName: node
+  linkType: hard
+
 "@napi-rs/wasm-runtime@npm:^0.2.9":
   version: 0.2.10
   resolution: "@napi-rs/wasm-runtime@npm:0.2.10"
@@ -833,6 +840,13 @@ __metadata:
   version: 2.0.7
   resolution: "@types/trusted-types@npm:2.0.7"
   checksum: 10c0/4c4855f10de7c6c135e0d32ce462419d8abbbc33713b31d294596c0cc34ae1fa6112a2f9da729c8f7a20707782b0d69da3b1f8df6645b0366d08825ca1522e0c
+  languageName: node
+  linkType: hard
+
+"@types/turndown@npm:^5.0.6":
+  version: 5.0.6
+  resolution: "@types/turndown@npm:5.0.6"
+  checksum: 10c0/cc5648c115b67ba413782fd0a8ae273ad6b87940df770ab9a5fefe0303c368704013fca2a55dd08f46a2132a747912fd47f96a83162c47fd189babf1352ac4be
   languageName: node
   linkType: hard
 
@@ -2420,6 +2434,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"turndown-plugin-gfm@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "turndown-plugin-gfm@npm:1.0.2"
+  checksum: 10c0/eb9bc20dbb08d5335231f9617d7440f14b35781f14a3a393d8f13fc8205afeb11a0a632d52da4548ab0fa353f315ca265462b24d368faf23258dccbe439182b9
+  languageName: node
+  linkType: hard
+
+"turndown@npm:^7.2.2":
+  version: 7.2.2
+  resolution: "turndown@npm:7.2.2"
+  dependencies:
+    "@mixmark-io/domino": "npm:^2.2.0"
+  checksum: 10c0/ee09f7bd67c468505aad6c3a26b11269ca49ffce07eaa9c212926d068f242b11b4e955b31a58289f26674ff29f91209b29454907551dcaec7da712e524cc78c2
+  languageName: node
+  linkType: hard
+
 "typescript@npm:~5.8.3":
   version: 5.8.3
   resolution: "typescript@npm:5.8.3"
@@ -2542,6 +2572,7 @@ __metadata:
     "@types/node": "npm:^22.15.29"
     "@types/react": "npm:^19.1.2"
     "@types/react-dom": "npm:^19.1.2"
+    "@types/turndown": "npm:^5.0.6"
     "@vitejs/plugin-react-swc": "npm:^3.9.0"
     axios: "npm:^1.13.2"
     dompurify: "npm:^3.3.1"
@@ -2552,6 +2583,8 @@ __metadata:
     react-dom: "npm:^19.1.0"
     react-intersection-observer: "npm:^10.0.2"
     react-router-dom: "npm:^7.12.0"
+    turndown: "npm:^7.2.2"
+    turndown-plugin-gfm: "npm:^1.0.2"
     typescript: "npm:~5.8.3"
     vite: "npm:^6.3.5"
     vite-plugin-mkcert: "npm:^1.17.9"

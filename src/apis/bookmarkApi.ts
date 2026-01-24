@@ -1,4 +1,4 @@
-import type { Article } from '../types/article';
+import type { Article } from '@/types/article';
 import { api } from './instance';
 
 // Strict type for Bookmark response

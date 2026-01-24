@@ -1,9 +1,6 @@
+import { getCrawlerStatus } from '@/apis/crawlerApi';
+import type { CrawlerStatusItem, CrawlerStatusResponse } from '@/types/crawler';
 import { useQuery } from '@tanstack/react-query';
-import { getCrawlerStatus } from '../apis/crawlerApi';
-import type {
-  CrawlerStatusItem,
-  CrawlerStatusResponse,
-} from '../types/crawler';
 import styles from './CrawlerStatus.module.css';
 
 export const CrawlerStatus = () => {

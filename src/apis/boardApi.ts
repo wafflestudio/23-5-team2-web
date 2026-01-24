@@ -1,4 +1,4 @@
-import type { Board } from '../types/board';
+import type { Board } from '@/types/board';
 import { api } from './instance';
 
 interface GetBoardsResponse {

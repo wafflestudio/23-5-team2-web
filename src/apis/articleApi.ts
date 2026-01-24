@@ -1,10 +1,10 @@
-import type { AxiosError } from 'axios';
 import type {
   Article,
   ArticleFilterParams,
   ArticleListResponse,
   CreateArticleRequest,
-} from '../types/article';
+} from '@/types/article';
+import type { AxiosError } from 'axios';
 import { api } from './instance';
 
 export const createArticle = async (

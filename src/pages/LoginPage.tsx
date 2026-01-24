@@ -1,13 +1,13 @@
+import { authApi } from '@/apis/authApi';
+import styles from '@/components/auth/AuthForm.module.css';
+import AuthLayout from '@/components/auth/AuthLayout';
+import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
+import PasswordInput from '@/components/auth/PasswordInput';
+import { useUserStore } from '@/store/useUserStore';
+import type { AuthRequest } from '@/types/auth';
 // pages/LoginPage.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../apis/authApi';
-import GoogleLoginButton from '../components/GoogleLoginButton';
-import styles from '../components/auth/AuthForm.module.css';
-import AuthLayout from '../components/auth/AuthLayout';
-import PasswordInput from '../components/auth/PasswordInput';
-import { useUserStore } from '../store/useUserStore';
-import type { AuthRequest } from '../types/auth';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState<AuthRequest>({

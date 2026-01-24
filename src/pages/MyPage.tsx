@@ -1,11 +1,12 @@
+import { authApi } from '@/apis/authApi'; // Note: check import path, original was '../apis/auth' but LoginPage uses '../apis/authApi'. I saw LoginPage.tsx using authApi.
+import authStyles from '@/components/auth/AuthForm.module.css';
+import AuthLayout from '@/components/auth/AuthLayout';
+import PasswordInput from '@/components/auth/PasswordInput';
+import EmailSection from '@/components/mypage/EmailSection';
+import { useUserStore } from '@/store/useUserStore';
 import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../apis/authApi'; // Note: check import path, original was '../apis/auth' but LoginPage uses '../apis/authApi'. I saw LoginPage.tsx using authApi.
-import authStyles from '../components/auth/AuthForm.module.css';
-import AuthLayout from '../components/auth/AuthLayout';
-import PasswordInput from '../components/auth/PasswordInput';
-import { useUserStore } from '../store/useUserStore';
 import styles from './MyPage.module.css';
 
 const MyPage = () => {
@@ -139,6 +140,9 @@ const MyPage = () => {
           </p>
         )}
       </div>
+
+      {/* Email Management Section */}
+      <EmailSection />
 
       {/* Delete Account */}
       <button
