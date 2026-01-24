@@ -13,7 +13,7 @@
     "check-all": "yarn check:types && yarn check:format && yarn check:unused",
     "fix": "biome check --write --unsafe .",
     "fix-all": "yarn fix && yarn check-all",
-    "ready": "yarn install && yarn fix-all && yarn build"
+    "ready": "yarn install --immutable && yarn fix-all && yarn build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.16",

@@ -49,6 +49,27 @@
   color: #333;
 }
 
+.resetButton {
+  font-size: 0.85rem;
+  background-color: transparent;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  color: #666;
+  cursor: pointer;
+  margin-left: 12px;
+  padding: 4px 8px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.resetButton:hover {
+  background-color: #f0f0f0;
+  border-color: #ccc;
+  color: #333;
+}
+
 .filterContent {
   display: flex;
   flex-direction: column;

@@ -1,8 +1,5 @@
-// App.tsx
-
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import './style.css';
-import { NuqsAdapter } from 'nuqs/adapters/react';
 import { useEffect } from 'react';
 import Footer from './components/Footer';
 import Header from './components/Header';
@@ -28,30 +25,28 @@ const App = () => {
   }, [fetchUser]);
 
   return (
-    <Router>
-      <NuqsAdapter>
-        <Header />
-        <main>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/article/:articleId" element={<ArticleDetailPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+    <>
+      <Header />
+      <main>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/article/:articleId" element={<ArticleDetailPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-            <Route element={<ProtectedRoute />}>
-              <Route path="/create" element={<CreateArticlePage />} />
-              <Route path="/edit/:articleId" element={<CreateArticlePage />} />
-              <Route path="/mypage" element={<MyPage />} />
-              <Route path="/inbox" element={<Inbox />} />
-              <Route path="/bookmark" element={<BookmarkPage />} />
-            </Route>
+          <Route element={<ProtectedRoute />}>
+            <Route path="/create" element={<CreateArticlePage />} />
+            <Route path="/edit/:articleId" element={<CreateArticlePage />} />
+            <Route path="/mypage" element={<MyPage />} />
+            <Route path="/inbox" element={<Inbox />} />
+            <Route path="/bookmark" element={<BookmarkPage />} />
+          </Route>
 
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </main>
-        <Footer />
-      </NuqsAdapter>
-    </Router>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </main>
+      <Footer />
+    </>
   );
 };
 

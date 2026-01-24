@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NuqsAdapter } from 'nuqs/adapters/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 
 // QueryClient 인스턴스 생성
@@ -34,7 +36,11 @@ if (rootElement === null) {
 createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <BrowserRouter>
+        <NuqsAdapter>
+          <App />
+        </NuqsAdapter>
+      </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>
 );

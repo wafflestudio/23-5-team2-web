@@ -13,7 +13,7 @@ import {
   parseAsString,
   useQueryState,
 } from 'nuqs';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Link, useLocation } from 'react-router-dom';
 import { getArticles } from '../apis/articleApi';
@@ -32,6 +32,7 @@ import styles from './HomePage.module.css';
 
 const HomePage = () => {
   const location = useLocation();
+
   const queryClient = useQueryClient();
   const { user } = useUserStore();
 
@@ -44,14 +45,17 @@ const HomePage = () => {
     queryFn: getBoards,
   });
 
-  const ALL_BOARD_IDS = boards.map((b) => b.id).sort((a, b) => a - b);
+  const ALL_BOARD_IDS = useMemo(
+    () => boards.map((b) => b.id).sort((a, b) => a - b),
+    [boards]
+  );
 
   // 2. State Management with nuqs
   const [keyword, setKeyword] = useQueryState(
     'keyword',
     parseAsString.withDefault('').withOptions({
       clearOnDefault: true,
-      shallow: true,
+      shallow: false,
     })
   );
 
@@ -61,8 +65,8 @@ const HomePage = () => {
       .withDefault(ALL_BOARD_IDS)
       .withOptions({
         clearOnDefault: true,
-        shallow: true,
-        history: 'push', // Optional: user requirement just mentioned clean URL
+        shallow: false,
+        history: 'replace', // Optional: user requirement just mentioned clean URL
       })
     // User asked for: .withOptions({ clearOnDefault: true, shallow: true })
   );
@@ -72,17 +76,6 @@ const HomePage = () => {
     boards.length > 0 && selectedBoardIds.length === boards.length;
   const isNoneSelected = selectedBoardIds.length === 0;
   void isNoneSelected; // Silence unused variable warning
-
-  // Track if we have initialized the selection
-  const hasInitialized = React.useRef(false);
-
-  // Effect to select all boards by default ONLY when boards first load
-  useEffect(() => {
-    if (boards.length > 0 && !hasInitialized.current) {
-      setSelectedBoardIds(boards.map((b) => b.id));
-      hasInitialized.current = true;
-    }
-  }, [boards, setSelectedBoardIds]);
 
   // Handle Select All
   const handleAllToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -302,6 +295,12 @@ const HomePage = () => {
     }
   };
 
+  // Handle Reset Filters
+  const handleResetFilters = () => {
+    setKeyword(null);
+    setSelectedBoardIds(ALL_BOARD_IDS);
+  };
+
   // Infinite scroll trigger
   useEffect(() => {
     if (inView && hasNextPage) {
@@ -324,7 +323,16 @@ const HomePage = () => {
 
       {/* Board Filters */}
       <div className={styles.filterContainer}>
-        <h3 className={styles.filterTitle}>게시판 선택</h3>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <h3 className={styles.filterTitle}>게시판 선택</h3>
+          <button
+            onClick={handleResetFilters}
+            className={styles.resetButton}
+            type="button"
+          >
+            ↻ 필터 초기화
+          </button>
+        </div>
         <div className={styles.filterContent}>
           <div className={styles.checkboxGroup}>
             <label className={styles.checkboxLabel}>
@@ -350,7 +358,7 @@ const HomePage = () => {
             <Link
               to="/create"
               className={styles.writeButton}
-              state={{ from: location.search }}
+              state={{ from: location.pathname + location.search }}
             >
               글쓰기
             </Link>
@@ -368,7 +376,7 @@ const HomePage = () => {
               <Link
                 key={article.id}
                 to={`/article/${article.id}`}
-                state={{ from: location.search }}
+                state={{ from: location.pathname + location.search }}
                 className={styles.articleItem}
               >
                 <div className={styles.itemContent}>

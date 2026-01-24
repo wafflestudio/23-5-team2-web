@@ -212,7 +212,8 @@ const ArticleDetailPage = () => {
 
   const handleBack = () => {
     if (from) {
-      navigate(`/${from}`);
+      const destination = from.startsWith('/') ? from : `/${from}`;
+      navigate(destination);
     } else {
       navigate(-1);
     }
