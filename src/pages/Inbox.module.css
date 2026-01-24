@@ -168,7 +168,7 @@
 
 .unread {
   border-left: 3px solid #3b82f6;
-  padding-left: 12px;
+  /* padding-left removed to avoid shifting content */
 }
 
 .itemWrapper {
@@ -229,10 +229,36 @@
 }
 
 .notificationItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 16px 0;
-  /* border-bottom removed from here as it's now on wrapper */
-  display: block;
-  padding-right: 48px; /* Make space for delete button */
+  text-decoration: none;
+  gap: 16px;
+  flex: 1; /* Force link to take full available width/height of wrapper */
+  min-width: 0; /* Prevent flex overflow */
+  padding-right: 12px;
+}
+
+.itemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemSide {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.viewCount {
+  font-size: 0.9rem;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .itemCategory {

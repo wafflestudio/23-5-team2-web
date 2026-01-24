@@ -1,12 +1,12 @@
-import type { ArticleListResponse } from '../types/article';
+import type { InboxResponse } from '../types/article';
 import { api } from './instance';
 
 export const getInboxes = async (params?: {
   limit?: number;
   nextPublishedAt?: number;
   nextId?: number;
-}): Promise<ArticleListResponse> => {
-  const response = await api.get<ArticleListResponse>('/v1/inboxes', {
+}): Promise<InboxResponse> => {
+  const response = await api.get<InboxResponse>('/v1/inboxes', {
     params,
   });
 

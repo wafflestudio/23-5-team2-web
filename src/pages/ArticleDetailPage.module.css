@@ -39,6 +39,17 @@
   gap: 8px;
 }
 
+.originLinkHeader {
+  font-size: 0.8rem;
+  color: #888;
+  text-decoration: underline;
+  margin-left: 0;
+}
+
+.originLinkHeader:hover {
+  color: #555;
+}
+
 .subscribeButton {
   background: none;
   border: 1px solid rgb(72, 65, 155);

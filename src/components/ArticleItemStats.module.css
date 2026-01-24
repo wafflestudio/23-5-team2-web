@@ -1,0 +1,39 @@
+.statsContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  color: #555;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px; /* Counteract padding to maintain layout */
+}
+
+.active {
+  color: rgb(72, 65, 155);
+}
+
+.active svg {
+  fill: rgb(72, 65, 155);
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+}

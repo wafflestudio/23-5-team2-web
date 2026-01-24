@@ -1,4 +1,5 @@
 // components/Header.tsx
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../apis/authApi';
 import { useUserStore } from '../store/useUserStore';
@@ -7,11 +8,13 @@ import styles from './Header.module.css';
 const Header = () => {
   const { user, clearUser, isLoading } = useUserStore();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleLogout = async () => {
     try {
       await authApi.logout();
       clearUser();
+      queryClient.clear(); // Clear all cached data
       navigate('/');
     } catch (error) {
       console.error('로그아웃 실패:', error);

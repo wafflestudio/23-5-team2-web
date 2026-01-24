@@ -12,6 +12,11 @@ export interface Article {
   createdAt: string;
   updatedAt: string;
   isRead: boolean;
+  views: number;
+  likes: number;
+  dislikes: number;
+  isLiked?: boolean;
+  isDisliked?: boolean;
   bookmarkId?: number; // For bookmark management
   isInbox?: boolean; // For differentiating Feed vs Inbox items
 }
@@ -40,4 +45,16 @@ export interface CreateArticleRequest {
   author: string;
   originLink: string | null;
   publishedAt: string; // ISO8601
+}
+
+export interface InboxItem {
+  id: number;
+  userId: number;
+  article: Article;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface InboxResponse {
+  inboxes: InboxItem[];
 }

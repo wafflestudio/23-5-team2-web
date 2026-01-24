@@ -12,6 +12,7 @@ import {
 } from '../apis/boardApi';
 import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
 import { deleteInbox } from '../apis/inboxApi';
+import ArticleItemStats from '../components/ArticleItemStats';
 import { useUserStore } from '../store/useUserStore';
 import styles from './ArticleDetailPage.module.css';
 import NotFoundPage from './NotFoundPage';
@@ -292,7 +293,7 @@ const ArticleDetailPage = () => {
                     )}
                   </span>
                   {/* Delete Icon (Trash) - Only show if it is an inbox item (real or mock) */}
-                  {(isInbox !== false || isMock) && (
+                  {(isInbox || isMock) && (
                     <span
                       className={styles.bookmarkTag} // Reuse bookmark tag styles for consistency
                       onClick={handleDelete}
@@ -326,16 +327,63 @@ const ArticleDetailPage = () => {
           <span className={styles.date}>
             {new Date(article.publishedAt).toLocaleDateString()}
           </span>
-          {user && (
-            <div className={styles.buttonGroup}>
-              <button onClick={handleEdit} className={styles.editButton}>
-                수정
-              </button>
-              <button onClick={handleDelete} className={styles.deleteButton}>
-                삭제
-              </button>
-            </div>
+          {article.originLink && (
+            <a
+              href={article.originLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.originLinkHeader}
+            >
+              {article.originLink}
+            </a>
           )}
+          <span className={styles.separation} style={{ flex: 1 }}></span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <ArticleItemStats
+              articleId={article.id}
+              likeCount={article.likes || 0}
+              dislikeCount={article.dislikes || 0}
+              isLiked={!!article.isLiked}
+              isDisliked={!!article.isDisliked}
+            />
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '0.9rem',
+                color: '#888',
+              }}
+              title="조회수"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <span>{article.views?.toLocaleString() || 0}</span>
+            </div>
+
+            {user && (
+              <div className={styles.buttonGroup} style={{ marginLeft: '6px' }}>
+                <button onClick={handleEdit} className={styles.editButton}>
+                  수정
+                </button>
+                <button onClick={handleDelete} className={styles.deleteButton}>
+                  삭제
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
