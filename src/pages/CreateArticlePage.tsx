@@ -152,7 +152,8 @@ const CreateArticlePage = () => {
     mutationFn: createArticle,
     onSuccess: () => {
       alert('게시글이 성공적으로 작성되었습니다.');
-      navigate(`/${from}`);
+      const target = from || '/';
+      navigate(target.startsWith('/') ? target : `/${target}`);
     },
     onError: (error) => {
       console.error('Failed to create article', error);
@@ -315,7 +316,8 @@ const CreateArticlePage = () => {
               if (isEditMode) {
                 navigate(`/article/${articleId}`, { state: { from } });
               } else {
-                navigate(`/${from}`);
+                const target = from || '/';
+                navigate(target.startsWith('/') ? target : `/${target}`);
               }
             }}
           >
