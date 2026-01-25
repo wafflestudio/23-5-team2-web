@@ -34,7 +34,7 @@
 ```typescript
 // src/apis/instance.ts
 import axios from 'axios';
-import { API_BASE_URL } from '../constants/api'; // 추가
+import { API_BASE_URL } from '@/constants/api'; // 추가
 
 export const api = axios.create({
   // baseURL을 '/api' (프록시) 대신 실제 백엔드 주소로 변경

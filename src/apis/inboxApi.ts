@@ -1,4 +1,4 @@
-import type { InboxResponse } from '../types/article';
+import type { InboxResponse } from '@/types/inbox';
 import { api } from './instance';
 
 export const getInboxes = async (params?: {

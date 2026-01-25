@@ -1,5 +1,5 @@
 // src/apis/crawlerApi.ts
-import type { CrawlerStatusResponse } from '../types/crawler';
+import type { CrawlerStatusResponse } from '@/types/crawler';
 import { api } from './instance';
 
 export const getCrawlerStatus = async (): Promise<CrawlerStatusResponse> => {

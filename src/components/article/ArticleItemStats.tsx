@@ -1,7 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { AxiosError } from 'axios';
-import { useEffect, useState } from 'react';
 import {
   dislikeArticle,
   getArticleDislikes,
@@ -9,8 +7,10 @@ import {
   likeArticle,
   undislikeArticle,
   unlikeArticle,
-} from '../apis/articleApi';
-import { useUserStore } from '../store/useUserStore';
+} from '@/apis/articleApi';
+import { useUserStore } from '@/store/useUserStore';
+import type { AxiosError } from 'axios';
+import { useEffect, useState } from 'react';
 import styles from './ArticleItemStats.module.css';
 
 interface Props {

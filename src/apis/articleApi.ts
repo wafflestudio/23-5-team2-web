@@ -1,10 +1,10 @@
-import type { AxiosError } from 'axios';
 import type {
   Article,
   ArticleFilterParams,
   ArticleListResponse,
   CreateArticleRequest,
-} from '../types/article';
+} from '@/types/article';
+import type { AxiosError } from 'axios';
 import { api } from './instance';
 
 export const createArticle = async (
@@ -37,6 +37,10 @@ export const getArticles = async (
 export const getArticleDetail = async (articleId: number): Promise<Article> => {
   const response = await api.get<Article>(`/v1/articles/${articleId}`);
   return response.data;
+};
+
+export const deleteArticle = async (articleId: number): Promise<void> => {
+  await api.delete(`/v1/articles/${articleId}`);
 };
 
 export const getArticleLikes = async (articleId: number): Promise<boolean> => {

@@ -1,13 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
-import { Link } from 'react-router-dom';
 import {
   getMySubscriptions,
   subscribeBoard,
   unsubscribeBoard,
-} from '../apis/boardApi';
-import { getBookmarks, removeBookmark } from '../apis/bookmarkApi';
-import { useUserStore } from '../store/useUserStore';
+} from '@/apis/boardApi';
+import { getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
+import { useUserStore } from '@/store/useUserStore';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import { Link } from 'react-router-dom';
 import styles from './Inbox.module.css';
 
 const BookmarkPage = () => {

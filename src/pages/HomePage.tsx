@@ -1,3 +1,17 @@
+// src/pages/HomePage.tsx
+
+import { getArticles } from '@/apis/articleApi';
+import {
+  type Subscription,
+  getBoards,
+  getMySubscriptions,
+  subscribeBoard,
+  unsubscribeBoard,
+} from '@/apis/boardApi';
+import { addBookmark, getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
+import ArticleItemStats from '@/components/article/ArticleItemStats';
+import { useUserStore } from '@/store/useUserStore';
+import type { Article, ArticleListResponse } from '@/types/article';
 import {
   type InfiniteData,
   useInfiniteQuery,
@@ -5,33 +19,16 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-// pages/HomePage.tsx
 import { AxiosError } from 'axios';
-import {
-  parseAsArrayOf,
-  parseAsInteger,
-  parseAsString,
-  useQueryState,
-} from 'nuqs';
-import React, { useEffect } from 'react';
+import { parseAsString, useQueryState } from 'nuqs';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Link, useLocation } from 'react-router-dom';
-import { getArticles } from '../apis/articleApi';
-import {
-  type Subscription,
-  getBoards,
-  getMySubscriptions,
-  subscribeBoard,
-  unsubscribeBoard,
-} from '../apis/boardApi';
-import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
-import ArticleItemStats from '../components/ArticleItemStats';
-import { useUserStore } from '../store/useUserStore';
-import type { Article, ArticleListResponse } from '../types/article';
 import styles from './HomePage.module.css';
 
 const HomePage = () => {
   const location = useLocation();
+
   const queryClient = useQueryClient();
   const { user } = useUserStore();
 
@@ -44,62 +41,81 @@ const HomePage = () => {
     queryFn: getBoards,
   });
 
-  const ALL_BOARD_IDS = boards.map((b) => b.id).sort((a, b) => a - b);
+  const ALL_BOARD_IDS = useMemo(
+    () => boards.map((b) => b.id).sort((a, b) => a - b),
+    [boards]
+  );
 
   // 2. State Management with nuqs
   const [keyword, setKeyword] = useQueryState(
     'keyword',
     parseAsString.withDefault('').withOptions({
       clearOnDefault: true,
-      shallow: true,
+      shallow: false,
     })
   );
 
-  const [selectedBoardIds, setSelectedBoardIds] = useQueryState(
+  // Manual URL State Management for Board IDs
+  // null -> All Selected (Clean URL)
+  // 'none' -> None Selected
+  // '1,2,3' -> Partial Selection
+  const [rawBoardIds, setRawBoardIds] = useQueryState(
     'boardIds',
-    parseAsArrayOf(parseAsInteger)
-      .withDefault(ALL_BOARD_IDS)
-      .withOptions({
-        clearOnDefault: true,
-        shallow: true,
-        history: 'push', // Optional: user requirement just mentioned clean URL
-      })
-    // User asked for: .withOptions({ clearOnDefault: true, shallow: true })
+    parseAsString.withDefault('').withOptions({
+      clearOnDefault: true,
+      shallow: false,
+      history: 'replace',
+    })
+  );
+
+  // Derived State (Getter)
+  const selectedBoardIds = useMemo(() => {
+    if (!rawBoardIds) return ALL_BOARD_IDS; // Default (null/empty) = ALL
+    if (rawBoardIds === 'none') return []; // Explicit None
+    return rawBoardIds
+      .split(',')
+      .map(Number)
+      .sort((a, b) => a - b);
+  }, [rawBoardIds, ALL_BOARD_IDS]);
+
+  // Derived Setter
+  const updateBoardIds = useCallback(
+    (newIds: number[]) => {
+      if (newIds.length === 0) {
+        setRawBoardIds('none');
+      } else if (newIds.length === ALL_BOARD_IDS.length) {
+        setRawBoardIds(null); // Clear param -> Default ALL
+      } else {
+        setRawBoardIds(newIds.join(','));
+      }
+    },
+    [ALL_BOARD_IDS.length, setRawBoardIds]
   );
 
   // Derived variables
   const isAllSelected =
     boards.length > 0 && selectedBoardIds.length === boards.length;
-  const isNoneSelected = selectedBoardIds.length === 0;
-  void isNoneSelected; // Silence unused variable warning
-
-  // Track if we have initialized the selection
-  const hasInitialized = React.useRef(false);
-
-  // Effect to select all boards by default ONLY when boards first load
-  useEffect(() => {
-    if (boards.length > 0 && !hasInitialized.current) {
-      setSelectedBoardIds(boards.map((b) => b.id));
-      hasInitialized.current = true;
-    }
-  }, [boards, setSelectedBoardIds]);
+  // const isNoneSelected = selectedBoardIds.length === 0;
 
   // Handle Select All
   const handleAllToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedBoardIds(ALL_BOARD_IDS);
+      updateBoardIds(ALL_BOARD_IDS);
     } else {
-      setSelectedBoardIds([]);
+      updateBoardIds([]);
     }
   };
 
   const handleBoardCheck = (id: number, checked: boolean) => {
-    setSelectedBoardIds((prev) => {
-      if (checked) {
-        return [...prev, id].sort((a, b) => a - b);
-      }
-      return prev.filter((bid) => bid !== id).sort((a, b) => a - b);
-    });
+    let newIds: number[];
+    if (checked) {
+      newIds = [...selectedBoardIds, id];
+    } else {
+      newIds = selectedBoardIds.filter((bid) => bid !== id);
+    }
+    // Sort logic handled in setter/getter implicitly if needed, but best to keep consistent
+    newIds.sort((a, b) => a - b);
+    updateBoardIds(newIds);
   };
 
   // 3. Fetch Articles (Infinite)
@@ -116,7 +132,27 @@ const HomePage = () => {
       getArticles({
         keyword,
         boardIds:
+          // If all selected (default), we can send specific IDs or undefined depending on backend.
+          // Since selectedBoardIds returns ALL_BOARD_IDS when defaults,
+          // we should verify if backend treats undefined as All.
+          // Based on original code:
+          // selectedBoardIds.length > 0 ? selectedBoardIds.join(',') : undefined
+          // BUT original code logic was "empty array = invalid state" or "init state".
+          // Now selectedBoardIds IS the actual list.
+          // If All selected (length == total), we might want to send 'undefined' if backend optimizes it,
+          // OR send all IDs.
+          // Let's stick to sending joined string if it has items.
           selectedBoardIds.length > 0 ? selectedBoardIds.join(',') : undefined,
+        // Note: If 'none', length is 0, so undefined is sent.
+        // Ensure Backend handles undefined as 'All' or 'None'?
+        // Original logic: "params.has('boardIds')" check.
+        // If undefined is sent, backend likely returns ALL.
+        // This poses a problem for 'None Selected'.
+        // If user selects NONE, we want 0 articles.
+        // If we send undefined, backend returns ALL articles.
+        // FIX: If selectedBoardIds is empty, we must send a signal for "NO ARTICLES".
+        // Or we can just not query?
+        // enabled: selectedBoardIds.length > 0 handles this!
         limit: 20,
         nextPublishedAt: pageParam?.nextPublishedAt,
         nextId: pageParam?.nextId,
@@ -133,6 +169,7 @@ const HomePage = () => {
       }
       return undefined;
     },
+    // Prevent fetching if NO boards are selected
     enabled: selectedBoardIds.length > 0,
   });
 
@@ -224,8 +261,6 @@ const HomePage = () => {
           articleToAdd!,
         ]);
       } else {
-        // Fallback: If we can't find it (rare), still better to not show a broken one or maybe fetch it?
-        // for now, we won't optimistically update if we can't find the data, to avoid the 'white box' issue.
         console.warn(
           'Could not find article details for optimistic bookmark update'
         );
@@ -302,6 +337,12 @@ const HomePage = () => {
     }
   };
 
+  // Handle Reset Filters
+  const handleResetFilters = () => {
+    setKeyword(null);
+    updateBoardIds(ALL_BOARD_IDS);
+  };
+
   // Infinite scroll trigger
   useEffect(() => {
     if (inView && hasNextPage) {
@@ -324,7 +365,16 @@ const HomePage = () => {
 
       {/* Board Filters */}
       <div className={styles.filterContainer}>
-        <h3 className={styles.filterTitle}>게시판 선택</h3>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <h3 className={styles.filterTitle}>게시판 선택</h3>
+          <button
+            onClick={handleResetFilters}
+            className={styles.resetButton}
+            type="button"
+          >
+            ↻ 필터 초기화
+          </button>
+        </div>
         <div className={styles.filterContent}>
           <div className={styles.checkboxGroup}>
             <label className={styles.checkboxLabel}>
@@ -350,7 +400,7 @@ const HomePage = () => {
             <Link
               to="/create"
               className={styles.writeButton}
-              state={{ from: location.search }}
+              state={{ from: location.pathname + location.search }}
             >
               글쓰기
             </Link>
@@ -368,7 +418,7 @@ const HomePage = () => {
               <Link
                 key={article.id}
                 to={`/article/${article.id}`}
-                state={{ from: location.search }}
+                state={{ from: location.pathname + location.search }}
                 className={styles.articleItem}
               >
                 <div className={styles.itemContent}>
@@ -377,9 +427,6 @@ const HomePage = () => {
                       [{article.board.name}]
                     </div>
                     {user &&
-                      /**
-                       * Find the subscription object for this board.
-                       */
                       (() => {
                         const subscription = subscriptions.find(
                           (sub) => sub.boardId === article.board.id

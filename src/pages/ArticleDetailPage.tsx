@@ -1,19 +1,21 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 // pages/ArticleDetailPage.tsx
-import DOMPurify from 'dompurify';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { getArticleDetail } from '../apis/articleApi';
+
+import { deleteArticle, getArticleDetail } from '@/apis/articleApi';
 import {
   type Subscription,
   getMySubscriptions,
   subscribeBoard,
   unsubscribeBoard,
-} from '../apis/boardApi';
-import { addBookmark, getBookmarks, removeBookmark } from '../apis/bookmarkApi';
-import { deleteInbox } from '../apis/inboxApi';
-import ArticleItemStats from '../components/ArticleItemStats';
-import { useUserStore } from '../store/useUserStore';
+} from '@/apis/boardApi';
+import { addBookmark, getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
+import { deleteInbox } from '@/apis/inboxApi';
+import ArticleItemStats from '@/components/article/ArticleItemStats';
+import { useUserStore } from '@/store/useUserStore';
+import type { Article } from '@/types/article';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import DOMPurify from 'dompurify';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import styles from './ArticleDetailPage.module.css';
 import NotFoundPage from './NotFoundPage';
 
@@ -35,7 +37,8 @@ const ArticleDetailPage = () => {
     data: article,
     isLoading,
     isError,
-  } = useQuery({
+    error,
+  } = useQuery<Article, AxiosError>({
     queryKey: ['article', articleId],
     queryFn: () => getArticleDetail(Number(articleId)),
     enabled: !!articleId,
@@ -126,6 +129,32 @@ const ArticleDetailPage = () => {
     },
   });
 
+  const inboxDeleteMutation = useMutation({
+    mutationFn: (id: number) => deleteInbox(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inbox'] });
+      alert('삭제되었습니다.');
+      navigate(-1);
+    },
+    onError: (error) => {
+      console.error('Failed to delete message', error);
+      alert('메시지 삭제에 실패했습니다.');
+    },
+  });
+
+  const articleDeleteMutation = useMutation({
+    mutationFn: (id: number) => deleteArticle(id),
+    onSuccess: () => {
+      alert('삭제되었습니다.');
+      queryClient.invalidateQueries({ queryKey: ['articles'] }); // 목록 새로고침
+      handleBack(); // 이전 화면으로 이동
+    },
+    onError: (error) => {
+      console.error('Delete failed', error);
+      alert('게시글 삭제에 실패했습니다.');
+    },
+  });
+
   const handleBookmarkToggle = (e: React.MouseEvent, id: number) => {
     e.preventDefault();
     if (bookmarkedIds.has(id)) {
@@ -144,23 +173,10 @@ const ArticleDetailPage = () => {
     }
   };
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteInbox(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inbox'] });
-      alert('삭제되었습니다.');
-      navigate(-1);
-    },
-    onError: (error) => {
-      console.error('Failed to delete message', error);
-      alert('메시지 삭제에 실패했습니다.');
-    },
-  });
-
-  const handleDelete = () => {
+  const handleBookmarkDelete = () => {
     if (!article) return;
 
-    if (window.confirm('정말 삭제하시겠습니까?')) {
+    if (window.confirm('북마크를 삭제하시겠습니까?')) {
       if (isMock) {
         // Mock Delete Logic
         try {
@@ -179,37 +195,40 @@ const ArticleDetailPage = () => {
         }
       } else {
         // Real Delete Logic
-        deleteMutation.mutate(article.id);
+        inboxDeleteMutation.mutate(article.id);
       }
+    }
+  };
+
+  const handleArticleEdit = () => {
+    navigate(`/edit/${articleId}`, { state: { from } });
+  };
+
+  const handleArticleDelete = () => {
+    if (window.confirm('게시글을 삭제하시겠습니까?')) {
+      articleDeleteMutation.mutate(Number(articleId));
+    }
+  };
+
+  const handleBack = () => {
+    if (from) {
+      const destination = from.startsWith('/') ? from : `/${from}`;
+      navigate(destination);
+    } else {
+      navigate(-1);
     }
   };
 
   if (isLoading) {
     return <div className={styles.loading}>로딩 중...</div>;
   }
-
-  if (isError) {
-    // @ts-ignore
-    if (error?.response?.status === 404) {
+  if (isError || !article) {
+    if ((error as AxiosError)?.response?.status === 404) {
       return <NotFoundPage />;
     }
-  }
-
-  const handleEdit = () => {
-    navigate(`/edit/${articleId}`, { state: { from } });
-  };
-
-  const handleBack = () => {
-    if (from) {
-      navigate(`/${from}`);
-    } else {
-      navigate(-1);
-    }
-  };
-
-  if (isLoading) return <div className={styles.loading}>Loading...</div>;
-  if (isError || !article)
+    // 404가 아니더라도 article이 없으면 더 이상 렌더링을 진행할 수 없으므로 에러 페이지나 null 반환
     return <div className={styles.error}>게시글을 불러올 수 없습니다.</div>;
+  }
 
   // Sanitize HTML content
   const sanitizedContent = DOMPurify.sanitize(article.content);
@@ -247,7 +266,7 @@ const ArticleDetailPage = () => {
                         }
                       } else {
                         if (window.confirm('이 게시판을 구독하시겠습니까?')) {
-                          subscribeMutation.mutate(article!.board.id);
+                          subscribeMutation.mutate(article.board.id);
                         }
                       }
                     }}
@@ -256,17 +275,15 @@ const ArticleDetailPage = () => {
                   </button>
                   <span
                     className={`${styles.bookmarkTag} ${
-                      bookmarkedIds.has(article!.id)
-                        ? styles.bookmarkActive
-                        : ''
+                      bookmarkedIds.has(article.id) ? styles.bookmarkActive : ''
                     }`}
-                    onClick={(e) => handleBookmarkToggle(e, article!.id)}
+                    onClick={(e) => handleBookmarkToggle(e, article.id)}
                     role="button"
                     title={
-                      bookmarkedIds.has(article!.id) ? '북마크 해제' : '북마크'
+                      bookmarkedIds.has(article.id) ? '북마크 해제' : '북마크'
                     }
                   >
-                    {bookmarkedIds.has(article!.id) ? (
+                    {bookmarkedIds.has(article.id) ? (
                       <svg
                         width="20"
                         height="20"
@@ -296,7 +313,7 @@ const ArticleDetailPage = () => {
                   {(isInbox || isMock) && (
                     <span
                       className={styles.bookmarkTag} // Reuse bookmark tag styles for consistency
-                      onClick={handleDelete}
+                      onClick={handleBookmarkDelete}
                       role="button"
                       title="삭제"
                       style={{ color: '#ccc' }} // Default color, hover handled by class or inline if needed
@@ -375,10 +392,16 @@ const ArticleDetailPage = () => {
 
             {user && (
               <div className={styles.buttonGroup} style={{ marginLeft: '6px' }}>
-                <button onClick={handleEdit} className={styles.editButton}>
+                <button
+                  onClick={handleArticleEdit}
+                  className={styles.editButton}
+                >
                   수정
                 </button>
-                <button onClick={handleDelete} className={styles.deleteButton}>
+                <button
+                  onClick={handleArticleDelete}
+                  className={styles.deleteButton}
+                >
                   삭제
                 </button>
               </div>

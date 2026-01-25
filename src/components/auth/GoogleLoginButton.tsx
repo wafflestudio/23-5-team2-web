@@ -1,5 +1,5 @@
 // components/GoogleLoginButton.tsx
-import { BACKEND_URL } from '../constants/api';
+import { BACKEND_URL } from '@/constants/api';
 
 interface Props {
   text?: string;
