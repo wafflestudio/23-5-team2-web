@@ -34,6 +34,15 @@ export const getArticles = async (
   return response.data;
 };
 
+export const getHotArticles = async (
+  params?: ArticleFilterParams
+): Promise<ArticleListResponse> => {
+  const response = await api.get<ArticleListResponse>('/v1/articles/hots', {
+    params,
+  });
+  return response.data;
+};
+
 export const getArticleDetail = async (articleId: number): Promise<Article> => {
   const response = await api.get<Article>(`/v1/articles/${articleId}`);
   return response.data;

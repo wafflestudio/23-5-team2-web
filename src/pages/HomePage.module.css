@@ -297,3 +297,29 @@
   background-color: rgb(72, 65, 155);
   color: white;
 }
+
+.contentWrapper {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  position: relative;
+}
+
+.mainContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  display: none; /* Hide on smaller screens */
+  position: sticky;
+  top: 20px;
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    display: block;
+  }
+}

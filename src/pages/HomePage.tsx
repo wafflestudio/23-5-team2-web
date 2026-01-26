@@ -10,6 +10,7 @@ import {
 } from '@/apis/boardApi';
 import { addBookmark, getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
 import ArticleItemStats from '@/components/article/ArticleItemStats';
+import HotArticlePreview from '@/components/home/HotArticlePreview';
 import { useUserStore } from '@/store/useUserStore';
 import type { Article, ArticleListResponse } from '@/types/article';
 import {
@@ -363,202 +364,217 @@ const HomePage = () => {
         />
       </div>
 
-      {/* Board Filters */}
-      <div className={styles.filterContainer}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <h3 className={styles.filterTitle}>게시판 선택</h3>
-          <button
-            onClick={handleResetFilters}
-            className={styles.resetButton}
-            type="button"
-          >
-            ↻ 필터 초기화
-          </button>
-        </div>
-        <div className={styles.filterContent}>
-          <div className={styles.checkboxGroup}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={isAllSelected}
-                onChange={handleAllToggle}
-              />
-              전체 선택
-            </label>
-            {boards.map((board) => (
-              <label key={board.id} className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={selectedBoardIds.includes(board.id)}
-                  onChange={(e) => handleBoardCheck(board.id, e.target.checked)}
-                />
-                {board.name}
-              </label>
-            ))}
-          </div>
-          {user && (
-            <Link
-              to="/create"
-              className={styles.writeButton}
-              state={{ from: location.pathname + location.search }}
-            >
-              글쓰기
-            </Link>
-          )}
-        </div>
-      </div>
-
-      {/* Article List */}
-      <div className={styles.articleList}>
-        {isLoading && <p className={styles.loading}>로딩 중...</p>}
-        {isError && <p className={styles.error}>에러가 발생했습니다.</p>}
-        {data?.pages.map((page, i) => (
-          <React.Fragment key={i}>
-            {page.data.map((article) => (
-              <Link
-                key={article.id}
-                to={`/article/${article.id}`}
-                state={{ from: location.pathname + location.search }}
-                className={styles.articleItem}
+      <div className={styles.contentWrapper}>
+        <div className={styles.mainContent}>
+          {/* Board Filters */}
+          <div className={styles.filterContainer}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <h3 className={styles.filterTitle}>게시판 선택</h3>
+              <button
+                onClick={handleResetFilters}
+                className={styles.resetButton}
+                type="button"
               >
-                <div className={styles.itemContent}>
-                  <div className={styles.headerRow}>
-                    <div className={styles.boardName}>
-                      [{article.board.name}]
-                    </div>
-                    {user &&
-                      (() => {
-                        const subscription = subscriptions.find(
-                          (sub) => sub.boardId === article.board.id
-                        );
-                        const isSubscribed = !!subscription;
-
-                        return (
-                          <span
-                            className={`${styles.subscribeTag} ${
-                              isSubscribed ? styles.active : ''
-                            }`}
-                            onClick={(e) => {
-                              e.preventDefault(); // Prevent Link navigation
-                              e.stopPropagation();
-
-                              if (isSubscribed) {
-                                if (
-                                  window.confirm('구독을 취소하시겠습니까?')
-                                ) {
-                                  unsubscribeMutation.mutate(subscription.id);
-                                }
-                              } else {
-                                if (
-                                  window.confirm(
-                                    '이 게시판을 구독하시겠습니까?'
-                                  )
-                                ) {
-                                  subscribeMutation.mutate(article.board.id);
-                                }
-                              }
-                            }}
-                            role="button"
-                          >
-                            {isSubscribed ? '✔ 구독중' : '구독'}
-                          </span>
-                        );
-                      })()}
-                    {user && (
-                      <span
-                        className={`${styles.bookmarkTag} ${
-                          bookmarkedIds.has(article.id)
-                            ? styles.bookmarkActive
-                            : ''
-                        }`}
-                        onClick={(e) => handleBookmarkToggle(e, article.id)}
-                        role="button"
-                        title={
-                          bookmarkedIds.has(article.id)
-                            ? '북마크 해제'
-                            : '북마크'
-                        }
-                      >
-                        {bookmarkedIds.has(article.id) ? (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
-                          </svg>
-                        ) : (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
-                          </svg>
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  <div className={styles.articleTitle}>{article.title}</div>
-                  <div className={styles.articleMeta}>
-                    <span>{article.author}</span>
-                    <span className={styles.separator}>|</span>
-                    <span>
-                      {new Date(article.publishedAt).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-                {/* Right Side: View Count */}
-                <div className={styles.itemSide}>
-                  <ArticleItemStats
-                    articleId={article.id}
-                    likeCount={article.likes}
-                    dislikeCount={article.dislikes}
-                    isLiked={!!article.isLiked}
-                    isDisliked={!!article.isDisliked}
+                ↻ 필터 초기화
+              </button>
+            </div>
+            <div className={styles.filterContent}>
+              <div className={styles.checkboxGroup}>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={handleAllToggle}
                   />
-                  <div className={styles.viewCount} title="조회수">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    <span>{article.views?.toLocaleString() || 0}</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </React.Fragment>
-        ))}
+                  전체 선택
+                </label>
+                {boards.map((board) => (
+                  <label key={board.id} className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={selectedBoardIds.includes(board.id)}
+                      onChange={(e) =>
+                        handleBoardCheck(board.id, e.target.checked)
+                      }
+                    />
+                    {board.name}
+                  </label>
+                ))}
+              </div>
+              {user && (
+                <Link
+                  to="/create"
+                  className={styles.writeButton}
+                  state={{ from: location.pathname + location.search }}
+                >
+                  글쓰기
+                </Link>
+              )}
+            </div>
+          </div>
 
-        {/* Loading Indicator for Infinite Scroll */}
-        <div
-          ref={ref}
-          className={styles.loading}
-          style={{ height: '20px', padding: 0 }}
-        >
-          {isFetchingNextPage && '더 불러오는 중...'}
+          {/* Article List */}
+          <div className={styles.articleList}>
+            {isLoading && <p className={styles.loading}>로딩 중...</p>}
+            {isError && <p className={styles.error}>에러가 발생했습니다.</p>}
+            {data?.pages.map((page, i) => (
+              <React.Fragment key={i}>
+                {page.data.map((article) => (
+                  <Link
+                    key={article.id}
+                    to={`/article/${article.id}`}
+                    state={{ from: location.pathname + location.search }}
+                    className={styles.articleItem}
+                  >
+                    <div className={styles.itemContent}>
+                      <div className={styles.headerRow}>
+                        <div className={styles.boardName}>
+                          [{article.board.name}]
+                        </div>
+                        {user &&
+                          (() => {
+                            const subscription = subscriptions.find(
+                              (sub) => sub.boardId === article.board.id
+                            );
+                            const isSubscribed = !!subscription;
+
+                            return (
+                              <span
+                                className={`${styles.subscribeTag} ${
+                                  isSubscribed ? styles.active : ''
+                                }`}
+                                onClick={(e) => {
+                                  e.preventDefault(); // Prevent Link navigation
+                                  e.stopPropagation();
+
+                                  if (isSubscribed) {
+                                    if (
+                                      window.confirm('구독을 취소하시겠습니까?')
+                                    ) {
+                                      unsubscribeMutation.mutate(
+                                        subscription.id
+                                      );
+                                    }
+                                  } else {
+                                    if (
+                                      window.confirm(
+                                        '이 게시판을 구독하시겠습니까?'
+                                      )
+                                    ) {
+                                      subscribeMutation.mutate(
+                                        article.board.id
+                                      );
+                                    }
+                                  }
+                                }}
+                                role="button"
+                              >
+                                {isSubscribed ? '✔ 구독중' : '구독'}
+                              </span>
+                            );
+                          })()}
+                        {user && (
+                          <span
+                            className={`${styles.bookmarkTag} ${
+                              bookmarkedIds.has(article.id)
+                                ? styles.bookmarkActive
+                                : ''
+                            }`}
+                            onClick={(e) => handleBookmarkToggle(e, article.id)}
+                            role="button"
+                            title={
+                              bookmarkedIds.has(article.id)
+                                ? '북마크 해제'
+                                : '북마크'
+                            }
+                          >
+                            {bookmarkedIds.has(article.id) ? (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
+                              </svg>
+                            ) : (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
+                              </svg>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      <div className={styles.articleTitle}>{article.title}</div>
+                      <div className={styles.articleMeta}>
+                        <span>{article.author}</span>
+                        <span className={styles.separator}>|</span>
+                        <span>
+                          {new Date(article.publishedAt).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Right Side: View Count */}
+                    <div className={styles.itemSide}>
+                      <ArticleItemStats
+                        articleId={article.id}
+                        likeCount={article.likes}
+                        dislikeCount={article.dislikes}
+                        isLiked={!!article.isLiked}
+                        isDisliked={!!article.isDisliked}
+                      />
+                      <div className={styles.viewCount} title="조회수">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        <span>{article.views?.toLocaleString() || 0}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </React.Fragment>
+            ))}
+
+            {/* Loading Indicator for Infinite Scroll */}
+            <div
+              ref={ref}
+              className={styles.loading}
+              style={{ height: '20px', padding: 0 }}
+            >
+              {isFetchingNextPage && '더 불러오는 중...'}
+            </div>
+
+            {!hasNextPage && data && (
+              <p className={styles.endMessage}>모든 게시글을 불러왔습니다.</p>
+            )}
+          </div>
         </div>
 
-        {!hasNextPage && data && (
-          <p className={styles.endMessage}>모든 게시글을 불러왔습니다.</p>
-        )}
+        {/* Sidebar */}
+        <div className={styles.sidebar}>
+          <HotArticlePreview />
+        </div>
       </div>
     </div>
   );

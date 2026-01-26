@@ -8,6 +8,7 @@ import ArticleDetailPage from './pages/ArticleDetailPage';
 import BookmarkPage from './pages/BookmarkPage';
 import CreateArticlePage from './pages/CreateArticlePage';
 import HomePage from './pages/HomePage';
+import HotboardPage from './pages/HotboardPage';
 import Inbox from './pages/Inbox';
 import LoginPage from './pages/LoginPage';
 import MyPage from './pages/MyPage';
@@ -30,6 +31,7 @@ const App = () => {
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/hotboard" element={<HotboardPage />} />
           <Route path="/article/:articleId" element={<ArticleDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
