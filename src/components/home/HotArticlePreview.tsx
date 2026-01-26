@@ -23,7 +23,7 @@ const HotArticlePreview = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3 className={styles.title}>HOT 게시물</h3>
+        <h3 className={styles.title}>HOT 게시판</h3>
         <Link to="/hotboard" className={styles.moreLink}>
           more...
         </Link>
