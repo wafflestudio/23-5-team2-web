@@ -25,7 +25,7 @@ const Header = () => {
     <header className={styles.header}>
       {/* 왼쪽: 서비스 이름 */}
       <Link to="/" className={styles.logo}>
-        스누보드
+        알리샤
       </Link>
 
       {/* 오른쪽: 내비게이션 영역 */}
