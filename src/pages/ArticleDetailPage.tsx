@@ -390,7 +390,7 @@ const ArticleDetailPage = () => {
               <span>{article.views?.toLocaleString() || 0}</span>
             </div>
 
-            {user && (
+            {user && user.role >= 1000 && (
               <div className={styles.buttonGroup} style={{ marginLeft: '6px' }}>
                 <button
                   onClick={handleArticleEdit}

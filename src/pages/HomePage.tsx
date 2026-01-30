@@ -401,7 +401,7 @@ const HomePage = () => {
                   </label>
                 ))}
               </div>
-              {user && (
+              {user && user.role >= 1000 && (
                 <Link
                   to="/create"
                   className={styles.writeButton}
