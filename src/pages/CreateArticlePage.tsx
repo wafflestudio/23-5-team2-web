@@ -6,6 +6,7 @@ import {
 import { uploadImage } from '@/apis/imageApi';
 import type { CreateArticleRequest } from '@/types/article';
 // pages/CreateArticlePage.tsx
+// import { useUserStore } from '@/store/useUserStore';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { marked } from 'marked';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -19,6 +20,7 @@ type Tab = 'write' | 'preview';
 const CreateArticlePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  // const { user, isLoading: isUserLoading } = useUserStore();
   const from = location.state?.from || '';
   const { articleId } = useParams<{ articleId: string }>();
   const isEditMode = !!articleId;

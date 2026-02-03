@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import './style.css';
 import { useEffect } from 'react';
+import AdminProtectedRoute from './components/common/AdminProtectedRoute';
 import Footer from './components/common/Footer';
 import Header from './components/common/Header';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -37,11 +38,14 @@ const App = () => {
           <Route path="/register" element={<RegisterPage />} />
 
           <Route element={<ProtectedRoute />}>
-            <Route path="/create" element={<CreateArticlePage />} />
-            <Route path="/edit/:articleId" element={<CreateArticlePage />} />
             <Route path="/mypage" element={<MyPage />} />
             <Route path="/inbox" element={<Inbox />} />
             <Route path="/bookmark" element={<BookmarkPage />} />
+
+            <Route element={<AdminProtectedRoute />}>
+              <Route path="/create" element={<CreateArticlePage />} />
+              <Route path="/edit/:articleId" element={<CreateArticlePage />} />
+            </Route>
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

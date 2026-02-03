@@ -356,7 +356,34 @@ const ArticleDetailPage = () => {
           )}
           <span className={styles.separation} style={{ flex: 1 }}></span>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginRight: '15px',
+            }}
+          >
+            {user && user.role >= 1000 && (
+              <div
+                className={styles.buttonGroup}
+                style={{ marginRight: '10px' }}
+              >
+                <button
+                  onClick={handleArticleEdit}
+                  className={styles.editButton}
+                >
+                  수정
+                </button>
+                <button
+                  onClick={handleArticleDelete}
+                  className={styles.deleteButton}
+                >
+                  삭제
+                </button>
+              </div>
+            )}
+
             <ArticleItemStats
               articleId={article.id}
               likeCount={article.likes || 0}
@@ -389,23 +416,6 @@ const ArticleDetailPage = () => {
               </svg>
               <span>{article.views?.toLocaleString() || 0}</span>
             </div>
-
-            {user && (
-              <div className={styles.buttonGroup} style={{ marginLeft: '6px' }}>
-                <button
-                  onClick={handleArticleEdit}
-                  className={styles.editButton}
-                >
-                  수정
-                </button>
-                <button
-                  onClick={handleArticleDelete}
-                  className={styles.deleteButton}
-                >
-                  삭제
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
