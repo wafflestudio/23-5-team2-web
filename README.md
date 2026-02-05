@@ -9,11 +9,32 @@
 
 ## 📖 프로젝트 간단 설명
 
+**알리샤**는 서울대학교 내 여러 플랫폼에 흩어져 있는 공지사항을  
+하나의 대시보드에 모아 제공하는 **통합 공지 서비스**입니다.  
+
+사용자가 여러 웹사이트를 일일이 방문하지 않아도  
+검색어와 게시판 필터링으로 원하는 공지를 손쉽게 확인할 수 있도록 설계되었습니다.
+
+---
+
+## 📚 알리샤만의 특별한 기능
+
+### 1. Inbox 및 이메일 알림
+**게시판 구독**: 사용자는 특정 게시판을 구독할 수 있으며, 해당 게시판에 새 게시글이 올라오면 사용자의 Inbox에 등록됩니다.
+**이메일 연동**: 이메일이 등록된 경우, 구독 중인 게시판의 업데이트 소식을 이메일로도 받아볼 수 있습니다.
+
+### 2. 북마크
+나중에 다시 확인해야 할 공지사항을 저장할 수 있는 기능입니다.
+
+### 3. HOT 게시판
+전체 공지 중 조회수가 높은 게시글들을 별도로 추출하여 메인 페이지 우측에 배치합니다.
+
+### 4. 좋아요 및 싫어요
+게시글에 좋아요 및 싫어요를 표시할 수 있습니다.
 
 ---
 
 ## 👥 팀원 소개
-각자의 자리에서 빛나는 5명의 멤버들이 모여 최고의 시너지를 만들어냈습니다.
 
 ### 🛠️ Backend
 | 이름 | 역할 |
@@ -26,42 +47,39 @@
 | 이름 | 역할 |
 |:---:|:---|
 | **김동현** | - 메인 페이지, 로그인/회원가입 페이지, 마이페이지 구현<br>- 게시글 읽기, 생성, 수정, 삭제 기능 구현<br>- Header, Footer 구현 |
-| **김한** | - 북마크 기능 및 페이지 구현<br>- Inbox 기능 및 페이지 구현<br>- HOT 게시판 구현 |
+| **김한** | - 북마크 기능 및 페이지 구현<br>- Inbox 기능 및 페이지 구현<br>- HOT 게시판 구현<br>- 좋아요 및 싫어요 기능 구현 |
 
 ---
 
-## ✨ 우리 조의 자랑할 거리
-### 1. **압도적인 비주얼 (Visual Excellence)**
-- **Emerald Theme**: 일관된 녹색 계열의 'Emerald' 컬러 팔레트를 사용하여 안정감 있으면서도 세련된 분위기를 연출했습니다.
-- **Glassmorphism**: 헤더와 주요 컨테이너에 유리를 깎은 듯한 반투명 효과를 적용해 깊이감과 트렌디함을 더했습니다.
-- **Dynamic Animations**: 스크롤에 반응하는 요소들과 미세한 마이크로 인터랙션으로 생동감 넘치는 웹사이트를 완성했습니다.
+## 📸 프로젝트 뷰
 
-### 2. **기술적 도전과 극복**
-- **Hybrid API Strategy**: 인증 관련 요청과 일반 API 요청의 경로를 분리하는 하이브리드 전략을 통해, 쿠키 도메인 문제와 Proxy 이슈를 슬기롭게 해결했습니다.
-- **Responsive Design**: `aspect-ratio`와 `CSS Grid/Flex`를 적극 활용하여, 모든 이미지와 레이아웃이 모바일 환경에서도 비율이 깨지지 않고 완벽하게 표시되도록 구현했습니다.
+### 1. 메인 페이지
+<img src="images/HomePage.png" width="1000">
 
-### 3. **체계적인 협업**
-- Git Flow를 준수한 브랜치 관리와 코드 리뷰 문화를 정착시켜, 충돌을 최소화하고 코드 품질을 높였습니다.
-- Notion과 Slack을 연동하여 실시간으로 이슈를 트래킹하고 해결했습니다.
+### 2. 로그인/회원가입 페이지
+<img src="images/LoginPage.png" width="1000">
+<img src="images/RegisterPage.png" width="1000">
 
----
+### 3. 마이페이지
+<img src="images/MyPage.png" width="1000">
 
-## 📸 프로젝트 뷰 (Sneak Peek)
-저희 웹사이트의 주요 화면을 미리 만나보세요.
+### 4. 게시글 상세 페이지
+<img src="" width="1000">
 
-| Main Hero Section | Members Introduction |
-|:---:|:---:|
-| <img src="" alt="Main Page Screenshot" width="100%" height="250" style="background-color: #eee; border: 1px solid #ddd; display: block;"> *(스크린샷 삽입 예정)* | <img src="" alt="Members Page Screenshot" width="100%" height="250" style="background-color: #eee; border: 1px solid #ddd; display: block;"> *(스크린샷 삽입 예정)* |
+### 5. 게시글 생성/수정 페이지
+<img src="" width="1000">
 
-| History & Timeline | Interactive Feature |
-|:---:|:---:|
-| <img src="" alt="History Page Screenshot" width="100%" height="250" style="background-color: #eee; border: 1px solid #ddd; display: block;"> *(스크린샷 삽입 예정)* | <img src="" alt="Interactive Feature Screenshot" width="100%" height="250" style="background-color: #eee; border: 1px solid #ddd; display: block;"> *(스크린샷 삽입 예정)* |
+### 6. 북마크 페이지
+<img src="" width="1000">
+
+### 7. Inbox 페이지
+<img src="" width="1000">
 
 ---
 
 <div align="center">
   
-  **23-5 Team 2**  
-  *Breaking the Gravity, Reaching for the Stars.*
+  **알리샤**  
+  *23-5 Team 2*
   
 </div>
