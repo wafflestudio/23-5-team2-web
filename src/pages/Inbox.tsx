@@ -400,6 +400,7 @@ const Inbox = () => {
     navigate(`/article/${article.id}`, {
       state: {
         isInbox: article.isInbox,
+        inboxId: article.inboxId,
       },
     });
   };
@@ -561,6 +562,7 @@ const Inbox = () => {
                         isMock: (article as Article & { isMock?: boolean })
                           .isMock,
                         isInbox: article.isInbox,
+                        inboxId: article.inboxId,
                       }}
                       className={styles.notificationItem}
                       onClick={(e) => handleRead(e, article)}
