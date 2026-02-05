@@ -39,7 +39,7 @@
 ### 🛠️ Backend
 | 이름 | 역할 |
 |:---:|:---|
-| **이한경** | **팀장**<br>- 배포 및 CI/CD 설정<br>- 스웨거 설정<br>- 계정 관리<br>- 로컬 및 구글 로그인 구현<br>- 이미지 업로드 구현<br>- 게시판 구독 및 Inbox 구현<br>- 북마크 구현<br>- 싫어요 기능 구현<br>- 첨단융합학부 크롤러 구현<br>- 관리자 권한 구현 |
+| **이한경** | **팀장**<br>- 배포 및 CI/CD 설정<br>- 스웨거 설정<br>- 계정 관리, 로컬 및 구글 로그인 구현<br>- 이미지 업로드 구현<br>- 게시판 구독 및 Inbox 구현<br>- 북마크 구현<br>- 싫어요 기능 구현<br>- 첨단융합학부 크롤러 구현<br>- 관리자 권한 구현 |
 | **송현우** | - 전체 데이터 table 설계<br>- 마이스누 크롤러 구현<br>- 크롤러 공통 기능 추상화<br>- 크롤러 상태 조회 기능 구현<br>- 경력개발센터, 컴퓨터공학부 크롤러 구현<br>- email CRD, email 발송 기능 구현<br>- 좋아요 기능 구현 |
 | **이세환** | - 게시글 CRUD 구현<br>- 게시글 및 HOT 게시판 구현<br>- 게시글 검색 기능 구현 |
 
@@ -66,7 +66,7 @@
 <img src="images/ArticleDetailPage.png" width="1000">
 
 ### 5. 게시글 생성/수정 페이지
-<img src="images/CreateArticlePage.png" width="1000"><br><img src="image/EditArticlePage.png" width="1000">
+<img src="images/CreateArticlePage.png" width="1000"><br><img src="images/EditArticlePage.png" width="1000">
 
 ### 6. 북마크 페이지
 <img src="images/BookmarkPage.png" width="1000">
