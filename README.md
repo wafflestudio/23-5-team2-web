@@ -57,20 +57,19 @@
 <img src="images/HomePage.png" width="1000">
 
 ### 2. 로그인/회원가입 페이지
-<img src="images/LoginPage.png" width="1000">
-<img src="images/RegisterPage.png" width="1000">
+<img src="images/LoginPage.png" width="1000"><br><img src="images/RegisterPage.png" width="1000">
 
 ### 3. 마이페이지
 <img src="images/MyPage.png" width="1000">
 
 ### 4. 게시글 상세 페이지
-<img src="" width="1000">
+<img src="images/ArticleDetailPage.png" width="1000">
 
 ### 5. 게시글 생성/수정 페이지
-<img src="" width="1000">
+<img src="images/CreateArticlePage.png" width="1000"><br><img src="image/EditArticlePage.png" width="1000">
 
 ### 6. 북마크 페이지
-<img src="" width="1000">
+<img src="images/BookmarkPage.png" width="1000">
 
 ### 7. Inbox 페이지
 <img src="" width="1000">
