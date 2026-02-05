@@ -27,10 +27,11 @@ const ArticleDetailPage = () => {
   const queryClient = useQueryClient();
   const { user } = useUserStore();
 
-  const { isMock, isInbox } =
+  const { isMock, isInbox, inboxId } =
     (location.state as {
       isMock?: boolean;
       isInbox?: boolean;
+      inboxId?: number;
     }) || {};
 
   const {
@@ -176,7 +177,7 @@ const ArticleDetailPage = () => {
   const handleBookmarkDelete = () => {
     if (!article) return;
 
-    if (window.confirm('북마크를 삭제하시겠습니까?')) {
+    if (window.confirm('Inbox에서 삭제하시겠습니까?')) {
       if (isMock) {
         // Mock Delete Logic
         try {
@@ -195,7 +196,11 @@ const ArticleDetailPage = () => {
         }
       } else {
         // Real Delete Logic
-        inboxDeleteMutation.mutate(article.id);
+        if (inboxId) {
+          inboxDeleteMutation.mutate(inboxId);
+        } else {
+          alert('Inbox ID를 찾을 수 없습니다.');
+        }
       }
     }
   };
@@ -315,7 +320,7 @@ const ArticleDetailPage = () => {
                       className={styles.bookmarkTag} // Reuse bookmark tag styles for consistency
                       onClick={handleBookmarkDelete}
                       role="button"
-                      title="삭제"
+                      title="Inbox에서 삭제"
                       style={{ color: '#ccc' }} // Default color, hover handled by class or inline if needed
                     >
                       <svg
