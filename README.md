@@ -72,7 +72,7 @@
 <img src="images/BookmarkPage.png" width="1000">
 
 ### 7. Inbox 페이지
-<img src="" width="1000">
+<img src="images/InboxPage.png" width="1000">
 
 ---
 
