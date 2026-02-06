@@ -247,6 +247,13 @@
   color: #333;
 }
 
+.cancelButton:disabled {
+  background-color: #f5f5f5;
+  border-color: #ddd;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
 .submitButton {
   background-color: rgb(72, 65, 155);
   border: none;
