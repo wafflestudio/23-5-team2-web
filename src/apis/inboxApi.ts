@@ -3,7 +3,6 @@ import { api } from './instance';
 
 export const getInboxes = async (params?: {
   limit?: number;
-  nextPublishedAt?: number;
   nextId?: number;
 }): Promise<InboxResponse> => {
   const response = await api.get<InboxResponse>('/v1/inboxes', {

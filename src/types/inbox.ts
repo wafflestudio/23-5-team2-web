@@ -12,5 +12,6 @@ export interface InboxResponse {
   inboxes: InboxItem[];
   paging: {
     hasNext: boolean;
+    nextId: number | null;
   };
 }

@@ -199,11 +199,9 @@ const Inbox = () => {
         return undefined;
       }
 
-      const lastItem = lastPage.inboxes[lastPage.inboxes.length - 1];
       return {
         limit: 15,
-        nextPublishedAt: new Date(lastItem.createdAt).getTime(),
-        nextId: lastItem.id,
+        nextId: lastPage.paging.nextId ?? undefined,
       };
     },
     enabled: !!user,
