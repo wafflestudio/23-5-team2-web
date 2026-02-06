@@ -10,4 +10,7 @@ export interface InboxItem {
 
 export interface InboxResponse {
   inboxes: InboxItem[];
+  paging: {
+    hasNext: boolean;
+  };
 }

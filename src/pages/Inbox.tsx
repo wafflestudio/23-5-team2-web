@@ -191,9 +191,14 @@ const Inbox = () => {
       nextId?: number;
     },
     getNextPageParam: (lastPage) => {
-      if (!lastPage.inboxes || lastPage.inboxes.length < 15) {
+      if (!lastPage.paging || !lastPage.paging.hasNext) {
         return undefined;
       }
+
+      if (!lastPage.inboxes || lastPage.inboxes.length === 0) {
+        return undefined;
+      }
+
       const lastItem = lastPage.inboxes[lastPage.inboxes.length - 1];
       return {
         limit: 15,
