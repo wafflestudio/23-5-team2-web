@@ -250,7 +250,7 @@ const ArticleDetailPage = () => {
           {user &&
             (() => {
               const subscription = subscriptions.find(
-                (sub) => sub.boardId === article.board.id
+                (sub: Subscription) => sub.boardId === article.board.id
               );
               const isSubscribed = !!subscription;
 
