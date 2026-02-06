@@ -190,11 +190,16 @@ const Inbox = () => {
       nextPublishedAt?: number;
       nextId?: number;
     },
-    getNextPageParam: (_) => {
-      // Current API response doesn't show paging support in the JSON snippet provided.
-      // If pagination is needed later, we check lastPage.paging.
-      // For now, assuming single page or no standard paging field in response.
-      return undefined;
+    getNextPageParam: (lastPage) => {
+      if (!lastPage.inboxes || lastPage.inboxes.length < 15) {
+        return undefined;
+      }
+      const lastItem = lastPage.inboxes[lastPage.inboxes.length - 1];
+      return {
+        limit: 15,
+        nextPublishedAt: new Date(lastItem.createdAt).getTime(),
+        nextId: lastItem.id,
+      };
     },
     enabled: !!user,
   });

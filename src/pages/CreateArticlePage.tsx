@@ -322,6 +322,7 @@ const CreateArticlePage = () => {
                 navigate(target.startsWith('/') ? target : `/${target}`);
               }
             }}
+            disabled={isPending}
           >
             취소
           </button>
