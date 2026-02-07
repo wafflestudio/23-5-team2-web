@@ -7,6 +7,7 @@ import {
 import { addBookmark, getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
 import { deleteInbox, getInboxes, readInbox } from '@/apis/inboxApi';
 import ArticleItemStats from '@/components/article/ArticleItemStats';
+import { EN_TO_KO } from '@/constants/board';
 import { useUserStore } from '@/store/useUserStore';
 import type { Article, ArticleListResponse } from '@/types/article';
 import type { InboxItem, InboxResponse } from '@/types/inbox';
@@ -510,7 +511,7 @@ const Inbox = () => {
                         `}
                         onClick={() => handleTagClick(board.id)}
                       >
-                        {board.name}
+                        {EN_TO_KO[board.name] || board.name}
                         {isEditing && (
                           <span className={styles.deleteIcon}>✕</span>
                         )}
@@ -578,7 +579,9 @@ const Inbox = () => {
                       <div className={styles.itemContent}>
                         <div className={styles.headerRow}>
                           <div className={styles.itemCategory}>
-                            [{article.board?.name || 'Unknown Board'}]
+                            [
+                            {EN_TO_KO[article.board.name] || article.board.name}
+                            ]
                           </div>
                           <span
                             className={`${styles.subscribeTag} ${subscriptions.some((s) => s.boardId === article.board?.id) ? styles.active : ''}`}

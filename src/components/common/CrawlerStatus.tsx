@@ -1,4 +1,5 @@
 import { getCrawlerStatus } from '@/apis/crawlerApi';
+import { SLUG_TO_KO } from '@/constants/board';
 import type { CrawlerStatusItem, CrawlerStatusResponse } from '@/types/crawler';
 import { useQuery } from '@tanstack/react-query';
 import styles from './CrawlerStatus.module.css';
@@ -40,7 +41,9 @@ export const CrawlerStatus = () => {
       {data?.results?.map((crawler: CrawlerStatusItem) => (
         <div key={crawler.id} className={styles.crawlerItem}>
           <span className={styles.dot} />
-          <span className={styles.boardName}>{crawler.boardName}</span>
+          <span className={styles.boardName}>
+            {SLUG_TO_KO[crawler.boardName] || crawler.boardName}
+          </span>
           <span className={styles.timeText}>
             {getTimeDiff(crawler.lastUpdatedAt)}
           </span>

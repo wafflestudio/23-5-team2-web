@@ -10,6 +10,7 @@ import {
 import { addBookmark, getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
 import { deleteInbox } from '@/apis/inboxApi';
 import ArticleItemStats from '@/components/article/ArticleItemStats';
+import { EN_TO_KO } from '@/constants/board';
 import { useUserStore } from '@/store/useUserStore';
 import type { Article } from '@/types/article';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -246,7 +247,7 @@ const ArticleDetailPage = () => {
 
       <div className={styles.articleHeader}>
         <div className={styles.boardName}>
-          [{article.board.name}]
+          [{EN_TO_KO[article.board.name] || article.board.name}]
           {user &&
             (() => {
               const subscription = subscriptions.find(

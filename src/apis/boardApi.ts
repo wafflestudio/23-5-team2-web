@@ -7,7 +7,6 @@ interface GetBoardsResponse {
 
 export const getBoards = async (): Promise<Board[]> => {
   const response = await api.get<GetBoardsResponse>('/v1/boards');
-  // console.log(response.data.boards);
   return response.data.boards;
 };
 

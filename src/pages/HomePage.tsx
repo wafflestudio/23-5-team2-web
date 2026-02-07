@@ -11,6 +11,8 @@ import {
 import { addBookmark, getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
 import ArticleItemStats from '@/components/article/ArticleItemStats';
 import HotArticlePreview from '@/components/home/HotArticlePreview';
+import { EN_TO_KO } from '@/constants/board';
+import { useFilterStore } from '@/store/useFilterStore';
 import { useUserStore } from '@/store/useUserStore';
 import type { Article, ArticleListResponse } from '@/types/article';
 import {
@@ -47,8 +49,16 @@ const HomePage = () => {
     [boards]
   );
 
-  // 2. State Management with nuqs
-  const [keyword, setKeyword] = useQueryState(
+  // 2. State Management with nuqs + Zustand
+  const {
+    keyword,
+    activeBoardIds,
+    setKeyword: setStoreKeyword,
+    setActiveBoardIds: setStoreActiveBoardIds,
+    initialize,
+  } = useFilterStore();
+
+  const [urlKeyword, setUrlKeyword] = useQueryState(
     'keyword',
     parseAsString.withDefault('').withOptions({
       clearOnDefault: true,
@@ -56,11 +66,7 @@ const HomePage = () => {
     })
   );
 
-  // Manual URL State Management for Board IDs
-  // null -> All Selected (Clean URL)
-  // 'none' -> None Selected
-  // '1,2,3' -> Partial Selection
-  const [rawBoardIds, setRawBoardIds] = useQueryState(
+  const [urlBoardIds, setUrlBoardIds] = useQueryState(
     'boardIds',
     parseAsString.withDefault('').withOptions({
       clearOnDefault: true,
@@ -69,52 +75,65 @@ const HomePage = () => {
     })
   );
 
-  // Derived State (Getter)
-  const selectedBoardIds = useMemo(() => {
-    if (!rawBoardIds) return ALL_BOARD_IDS; // Default (null/empty) = ALL
-    if (rawBoardIds === 'none') return []; // Explicit None
-    return rawBoardIds
-      .split(',')
-      .map(Number)
-      .sort((a, b) => a - b);
-  }, [rawBoardIds, ALL_BOARD_IDS]);
+  // Initialize Store from URL on Mount (or when boards load for default)
+  useEffect(() => {
+    // Guard: Wait for boards to load before doing anything
+    if (!boards || boards.length === 0) return;
 
-  // Derived Setter
+    // 1. If URL has specific filter ('1,2,3' or 'none'), we can initialize immediately
+    if (urlBoardIds) {
+      const initialIds =
+        urlBoardIds === 'none'
+          ? []
+          : urlBoardIds
+              .split(',')
+              .map(Number)
+              .sort((a, b) => a - b);
+      initialize(urlKeyword || '', initialIds);
+      return;
+    }
+
+    // 2. If URL is empty (default/refresh), wait for boards to load before setting "All Selected"
+    if (!urlBoardIds && boards.length > 0) {
+      initialize(urlKeyword || '', ALL_BOARD_IDS);
+    }
+  }, [boards, urlBoardIds, urlKeyword, ALL_BOARD_IDS, initialize]);
+
+  // Sync Handlers (Update Store + URL)
+  const handleKeywordChange = (newKeyword: string) => {
+    setStoreKeyword(newKeyword);
+    setUrlKeyword(newKeyword);
+  };
+
   const updateBoardIds = useCallback(
     (newIds: number[]) => {
+      setStoreActiveBoardIds(newIds); // Update Store (Source of Truth for finding articles)
+
+      // Update URL
       if (newIds.length === 0) {
-        setRawBoardIds('none');
+        setUrlBoardIds('none');
       } else if (newIds.length === ALL_BOARD_IDS.length) {
-        setRawBoardIds(null); // Clear param -> Default ALL
+        setUrlBoardIds(null); // Clear param -> Default ALL
       } else {
-        setRawBoardIds(newIds.join(','));
+        setUrlBoardIds(newIds.join(','));
       }
     },
-    [ALL_BOARD_IDS.length, setRawBoardIds]
+    [ALL_BOARD_IDS.length, setUrlBoardIds, setStoreActiveBoardIds]
   );
 
   // Derived variables
   const isAllSelected =
-    boards.length > 0 && selectedBoardIds.length === boards.length;
-  // const isNoneSelected = selectedBoardIds.length === 0;
+    boards.length > 0 && activeBoardIds.length === boards.length;
 
   // Handle Select All
-  const handleAllToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      updateBoardIds(ALL_BOARD_IDS);
-    } else {
-      updateBoardIds([]);
-    }
-  };
 
   const handleBoardCheck = (id: number, checked: boolean) => {
     let newIds: number[];
     if (checked) {
-      newIds = [...selectedBoardIds, id];
+      newIds = [...activeBoardIds, id];
     } else {
-      newIds = selectedBoardIds.filter((bid) => bid !== id);
+      newIds = activeBoardIds.filter((bid) => bid !== id);
     }
-    // Sort logic handled in setter/getter implicitly if needed, but best to keep consistent
     newIds.sort((a, b) => a - b);
     updateBoardIds(newIds);
   };
@@ -128,36 +147,23 @@ const HomePage = () => {
     isLoading,
     isError,
   } = useInfiniteQuery({
-    queryKey: ['articles', keyword, selectedBoardIds],
-    queryFn: ({ pageParam }) =>
-      getArticles({
+    queryKey: ['articles', keyword, activeBoardIds],
+    queryFn: ({ pageParam }) => {
+      // Return empty if no boards selected
+      if (activeBoardIds.length === 0) {
+        return Promise.resolve({
+          data: [],
+          paging: { hasNext: false, nextPublishedAt: 0, nextId: 0 },
+        } as ArticleListResponse);
+      }
+      return getArticles({
         keyword,
-        boardIds:
-          // If all selected (default), we can send specific IDs or undefined depending on backend.
-          // Since selectedBoardIds returns ALL_BOARD_IDS when defaults,
-          // we should verify if backend treats undefined as All.
-          // Based on original code:
-          // selectedBoardIds.length > 0 ? selectedBoardIds.join(',') : undefined
-          // BUT original code logic was "empty array = invalid state" or "init state".
-          // Now selectedBoardIds IS the actual list.
-          // If All selected (length == total), we might want to send 'undefined' if backend optimizes it,
-          // OR send all IDs.
-          // Let's stick to sending joined string if it has items.
-          selectedBoardIds.length > 0 ? selectedBoardIds.join(',') : undefined,
-        // Note: If 'none', length is 0, so undefined is sent.
-        // Ensure Backend handles undefined as 'All' or 'None'?
-        // Original logic: "params.has('boardIds')" check.
-        // If undefined is sent, backend likely returns ALL.
-        // This poses a problem for 'None Selected'.
-        // If user selects NONE, we want 0 articles.
-        // If we send undefined, backend returns ALL articles.
-        // FIX: If selectedBoardIds is empty, we must send a signal for "NO ARTICLES".
-        // Or we can just not query?
-        // enabled: selectedBoardIds.length > 0 handles this!
+        boardIds: activeBoardIds.join(','),
         limit: 20,
         nextPublishedAt: pageParam?.nextPublishedAt,
         nextId: pageParam?.nextId,
-      }),
+      });
+    },
     initialPageParam: undefined as
       | { nextPublishedAt?: number; nextId?: number }
       | undefined,
@@ -170,9 +176,12 @@ const HomePage = () => {
       }
       return undefined;
     },
-    // Prevent fetching if NO boards are selected
-    enabled: selectedBoardIds.length > 0,
+    placeholderData: (prev) => prev,
+    enabled: true,
   });
+
+  // Guard: Prevent flash of "No boards selected" while loading
+  const isEmptyFilter = !isLoading && activeBoardIds.length === 0;
 
   // 3. Fetch My Subscriptions
   const { data: subscriptions = [] } = useQuery({
@@ -244,7 +253,7 @@ const HomePage = () => {
       let articleToAdd: Article | undefined;
       const feedData = queryClient.getQueryData<
         InfiniteData<ArticleListResponse>
-      >(['articles', keyword, selectedBoardIds]);
+      >(['articles', keyword, activeBoardIds]);
 
       if (feedData?.pages) {
         for (const page of feedData.pages) {
@@ -340,7 +349,7 @@ const HomePage = () => {
 
   // Handle Reset Filters
   const handleResetFilters = () => {
-    setKeyword(null);
+    handleKeywordChange('');
     updateBoardIds(ALL_BOARD_IDS);
   };
 
@@ -359,7 +368,7 @@ const HomePage = () => {
           type="text"
           placeholder="검색어를 입력하세요 (제목, 내용)"
           value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => handleKeywordChange(e.target.value)}
           className={styles.searchInput}
         />
       </div>
@@ -379,27 +388,36 @@ const HomePage = () => {
               </button>
             </div>
             <div className={styles.filterContent}>
-              <div className={styles.checkboxGroup}>
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    onChange={handleAllToggle}
-                  />
+              <div className={styles.boardList}>
+                {/* Select All Tag */}
+                <div
+                  className={`${styles.boardTag} ${
+                    isAllSelected ? styles.activeTag : styles.inactiveTag
+                  }`}
+                  onClick={() =>
+                    isAllSelected
+                      ? updateBoardIds([])
+                      : updateBoardIds(ALL_BOARD_IDS)
+                  }
+                >
                   전체 선택
-                </label>
-                {boards.map((board) => (
-                  <label key={board.id} className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={selectedBoardIds.includes(board.id)}
-                      onChange={(e) =>
-                        handleBoardCheck(board.id, e.target.checked)
-                      }
-                    />
-                    {board.name}
-                  </label>
-                ))}
+                </div>
+
+                {/* Individual Board Tags */}
+                {boards.map((board) => {
+                  const isActive = activeBoardIds.includes(board.id);
+                  return (
+                    <div
+                      key={board.id}
+                      className={`${styles.boardTag} ${
+                        isActive ? styles.activeTag : styles.inactiveTag
+                      }`}
+                      onClick={() => handleBoardCheck(board.id, !isActive)}
+                    >
+                      {EN_TO_KO[board.name] || board.name}
+                    </div>
+                  );
+                })}
               </div>
               {user && user.role >= 1000 && (
                 <Link
@@ -415,146 +433,174 @@ const HomePage = () => {
 
           {/* Article List */}
           <div className={styles.articleList}>
-            {isLoading && <p className={styles.loading}>로딩 중...</p>}
-            {isError && <p className={styles.error}>에러가 발생했습니다.</p>}
-            {data?.pages.map((page, i) => (
-              <React.Fragment key={i}>
-                {page.data.map((article) => (
-                  <Link
-                    key={article.id}
-                    to={`/article/${article.id}`}
-                    state={{ from: location.pathname + location.search }}
-                    className={styles.articleItem}
-                  >
-                    <div className={styles.itemContent}>
-                      <div className={styles.headerRow}>
-                        <div className={styles.boardName}>
-                          [{article.board.name}]
+            {isEmptyFilter && (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '300px',
+                  color: '#6b7280',
+                  fontSize: '1.2rem',
+                  fontWeight: 500,
+                }}
+              >
+                선택된 게시판이 없습니다.
+              </div>
+            )}
+            {!isEmptyFilter && isLoading && (
+              <p className={styles.loading}>로딩 중...</p>
+            )}
+            {!isEmptyFilter && isError && (
+              <p className={styles.error}>에러가 발생했습니다.</p>
+            )}
+            {!isEmptyFilter &&
+              data?.pages.map((page, i) => (
+                <React.Fragment key={i}>
+                  {page.data.map((article) => (
+                    <Link
+                      key={article.id}
+                      to={`/article/${article.id}`}
+                      state={{ from: location.pathname + location.search }}
+                      className={styles.articleItem}
+                    >
+                      <div className={styles.itemContent}>
+                        <div className={styles.headerRow}>
+                          <div className={styles.boardName}>
+                            [
+                            {EN_TO_KO[article.board.name] || article.board.name}
+                            ]
+                          </div>
+                          {user &&
+                            (() => {
+                              const subscription = subscriptions.find(
+                                (sub) => sub.boardId === article.board.id
+                              );
+                              const isSubscribed = !!subscription;
+
+                              return (
+                                <span
+                                  className={`${styles.subscribeTag} ${
+                                    isSubscribed ? styles.active : ''
+                                  }`}
+                                  onClick={(e) => {
+                                    e.preventDefault(); // Prevent Link navigation
+                                    e.stopPropagation();
+
+                                    if (isSubscribed) {
+                                      if (
+                                        window.confirm(
+                                          '구독을 취소하시겠습니까?'
+                                        )
+                                      ) {
+                                        unsubscribeMutation.mutate(
+                                          subscription.id
+                                        );
+                                      }
+                                    } else {
+                                      if (
+                                        window.confirm(
+                                          '이 게시판을 구독하시겠습니까?'
+                                        )
+                                      ) {
+                                        subscribeMutation.mutate(
+                                          article.board.id
+                                        );
+                                      }
+                                    }
+                                  }}
+                                  role="button"
+                                >
+                                  {isSubscribed ? '✔ 구독중' : '구독'}
+                                </span>
+                              );
+                            })()}
+                          {user && (
+                            <span
+                              className={`${styles.bookmarkTag} ${
+                                bookmarkedIds.has(article.id)
+                                  ? styles.bookmarkActive
+                                  : ''
+                              }`}
+                              onClick={(e) =>
+                                handleBookmarkToggle(e, article.id)
+                              }
+                              role="button"
+                              title={
+                                bookmarkedIds.has(article.id)
+                                  ? '북마크 해제'
+                                  : '북마크'
+                              }
+                            >
+                              {bookmarkedIds.has(article.id) ? (
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
+                                </svg>
+                              ) : (
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
+                                </svg>
+                              )}
+                            </span>
+                          )}
                         </div>
-                        {user &&
-                          (() => {
-                            const subscription = subscriptions.find(
-                              (sub) => sub.boardId === article.board.id
-                            );
-                            const isSubscribed = !!subscription;
-
-                            return (
-                              <span
-                                className={`${styles.subscribeTag} ${
-                                  isSubscribed ? styles.active : ''
-                                }`}
-                                onClick={(e) => {
-                                  e.preventDefault(); // Prevent Link navigation
-                                  e.stopPropagation();
-
-                                  if (isSubscribed) {
-                                    if (
-                                      window.confirm('구독을 취소하시겠습니까?')
-                                    ) {
-                                      unsubscribeMutation.mutate(
-                                        subscription.id
-                                      );
-                                    }
-                                  } else {
-                                    if (
-                                      window.confirm(
-                                        '이 게시판을 구독하시겠습니까?'
-                                      )
-                                    ) {
-                                      subscribeMutation.mutate(
-                                        article.board.id
-                                      );
-                                    }
-                                  }
-                                }}
-                                role="button"
-                              >
-                                {isSubscribed ? '✔ 구독중' : '구독'}
-                              </span>
-                            );
-                          })()}
-                        {user && (
-                          <span
-                            className={`${styles.bookmarkTag} ${
-                              bookmarkedIds.has(article.id)
-                                ? styles.bookmarkActive
-                                : ''
-                            }`}
-                            onClick={(e) => handleBookmarkToggle(e, article.id)}
-                            role="button"
-                            title={
-                              bookmarkedIds.has(article.id)
-                                ? '북마크 해제'
-                                : '북마크'
-                            }
-                          >
-                            {bookmarkedIds.has(article.id) ? (
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path d="M5 5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21L12 17.5L5 21V5Z" />
-                              </svg>
-                            ) : (
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path d="M19 21L12 17.5L5 21V5C5 3.89543 5.89543 3 7 3H17C18.1046 3 19 3.89543 19 5V21Z" />
-                              </svg>
-                            )}
+                        <div className={styles.articleTitle}>
+                          {article.title}
+                        </div>
+                        <div className={styles.articleMeta}>
+                          <span>{article.author}</span>
+                          <span className={styles.separator}>|</span>
+                          <span>
+                            {new Date(article.publishedAt).toLocaleString()}
                           </span>
-                        )}
+                        </div>
                       </div>
-                      <div className={styles.articleTitle}>{article.title}</div>
-                      <div className={styles.articleMeta}>
-                        <span>{article.author}</span>
-                        <span className={styles.separator}>|</span>
-                        <span>
-                          {new Date(article.publishedAt).toLocaleString()}
-                        </span>
+                      {/* Right Side: View Count */}
+                      <div className={styles.itemSide}>
+                        <ArticleItemStats
+                          articleId={article.id}
+                          likeCount={article.likes}
+                          dislikeCount={article.dislikes}
+                          isLiked={!!article.isLiked}
+                          isDisliked={!!article.isDisliked}
+                        />
+                        <div className={styles.viewCount} title="조회수">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                          <span>{article.views?.toLocaleString() || 0}</span>
+                        </div>
                       </div>
-                    </div>
-                    {/* Right Side: View Count */}
-                    <div className={styles.itemSide}>
-                      <ArticleItemStats
-                        articleId={article.id}
-                        likeCount={article.likes}
-                        dislikeCount={article.dislikes}
-                        isLiked={!!article.isLiked}
-                        isDisliked={!!article.isDisliked}
-                      />
-                      <div className={styles.viewCount} title="조회수">
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                        <span>{article.views?.toLocaleString() || 0}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </React.Fragment>
-            ))}
+                    </Link>
+                  ))}
+                </React.Fragment>
+              ))}
 
             {/* Loading Indicator for Infinite Scroll */}
             <div
@@ -562,10 +608,10 @@ const HomePage = () => {
               className={styles.loading}
               style={{ height: '20px', padding: 0 }}
             >
-              {isFetchingNextPage && '더 불러오는 중...'}
+              {!isEmptyFilter && isFetchingNextPage && '더 불러오는 중...'}
             </div>
 
-            {!hasNextPage && data && (
+            {!hasNextPage && data && !isEmptyFilter && (
               <p className={styles.endMessage}>모든 게시글을 불러왔습니다.</p>
             )}
           </div>
