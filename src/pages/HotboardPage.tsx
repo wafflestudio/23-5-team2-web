@@ -6,6 +6,7 @@ import {
 } from '@/apis/boardApi';
 import { addBookmark, getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
 import ArticleItemStats from '@/components/article/ArticleItemStats';
+import { EN_TO_KO } from '@/constants/board.ts';
 import { useUserStore } from '@/store/useUserStore';
 import type { Article } from '@/types/article';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -150,7 +151,9 @@ const HotboardPage = () => {
                       <div className={styles.itemContent}>
                         <div className={styles.headerRow}>
                           <div className={styles.itemCategory}>
-                            [{article.board?.name || 'Unknown Board'}]
+                            [
+                            {EN_TO_KO[article.board.name] || article.board.name}
+                            ]
                           </div>
                           {user &&
                             (() => {
