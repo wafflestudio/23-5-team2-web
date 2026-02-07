@@ -323,3 +323,44 @@
     display: block;
   }
 }
+
+/* Filter Tags (New) */
+.boardList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.boardTag {
+  display: inline-flex;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgb(72, 65, 155);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.2;
+  transition: all 0.2s;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.activeTag {
+  background-color: rgb(72, 65, 155);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(72, 65, 155, 0.3);
+}
+
+.inactiveTag {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.checkIcon {
+  font-size: 0.8em;
+}

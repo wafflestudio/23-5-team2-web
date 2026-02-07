@@ -126,13 +126,7 @@ const HomePage = () => {
     boards.length > 0 && activeBoardIds.length === boards.length;
 
   // Handle Select All
-  const handleAllToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      updateBoardIds(ALL_BOARD_IDS);
-    } else {
-      updateBoardIds([]);
-    }
-  };
+
 
   const handleBoardCheck = (id: number, checked: boolean) => {
     let newIds: number[];
@@ -395,27 +389,36 @@ const HomePage = () => {
               </button>
             </div>
             <div className={styles.filterContent}>
-              <div className={styles.checkboxGroup}>
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    onChange={handleAllToggle}
-                  />
+              <div className={styles.boardList}>
+                {/* Select All Tag */}
+                <div
+                  className={`${styles.boardTag} ${
+                    isAllSelected ? styles.activeTag : styles.inactiveTag
+                  }`}
+                  onClick={() =>
+                    isAllSelected
+                      ? updateBoardIds([])
+                      : updateBoardIds(ALL_BOARD_IDS)
+                  }
+                >
                   전체 선택
-                </label>
-                {boards.map((board) => (
-                  <label key={board.id} className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={activeBoardIds.includes(board.id)}
-                      onChange={(e) =>
-                        handleBoardCheck(board.id, e.target.checked)
-                      }
-                    />
-                    {EN_TO_KO[board.name] || board.name}
-                  </label>
-                ))}
+                </div>
+
+                {/* Individual Board Tags */}
+                {boards.map((board) => {
+                  const isActive = activeBoardIds.includes(board.id);
+                  return (
+                    <div
+                      key={board.id}
+                      className={`${styles.boardTag} ${
+                        isActive ? styles.activeTag : styles.inactiveTag
+                      }`}
+                      onClick={() => handleBoardCheck(board.id, !isActive)}
+                    >
+                      {EN_TO_KO[board.name] || board.name}
+                    </div>
+                  );
+                })}
               </div>
               {user && user.role >= 1000 && (
                 <Link
