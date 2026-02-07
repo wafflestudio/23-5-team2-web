@@ -11,6 +11,7 @@ import {
 import { addBookmark, getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
 import ArticleItemStats from '@/components/article/ArticleItemStats';
 import HotArticlePreview from '@/components/home/HotArticlePreview';
+import { EN_TO_KO } from '@/constants/board';
 import { useFilterStore } from '@/store/useFilterStore';
 import { useUserStore } from '@/store/useUserStore';
 import type { Article, ArticleListResponse } from '@/types/article';
@@ -412,7 +413,7 @@ const HomePage = () => {
                         handleBoardCheck(board.id, e.target.checked)
                       }
                     />
-                    {board.name}
+                    {EN_TO_KO[board.name] || board.name}
                   </label>
                 ))}
               </div>
@@ -464,7 +465,9 @@ const HomePage = () => {
                       <div className={styles.itemContent}>
                         <div className={styles.headerRow}>
                           <div className={styles.boardName}>
-                            [{article.board.name}]
+                            [
+                            {EN_TO_KO[article.board.name] || article.board.name}
+                            ]
                           </div>
                           {user &&
                             (() => {

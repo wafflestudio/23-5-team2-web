@@ -4,6 +4,7 @@ import {
   unsubscribeBoard,
 } from '@/apis/boardApi';
 import { getBookmarks, removeBookmark } from '@/apis/bookmarkApi';
+import { EN_TO_KO } from '@/constants/board';
 import { useUserStore } from '@/store/useUserStore';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
@@ -104,7 +105,11 @@ const BookmarkPage = () => {
                     >
                       <div className={styles.headerRow}>
                         <div className={styles.itemCategory}>
-                          [{article.board?.name || 'Unknown Board'}]
+                          [
+                          {EN_TO_KO[article.board?.name || ''] ||
+                            article.board?.name ||
+                            'Unknown Board'}
+                          ]
                         </div>
                         <span
                           className={`${styles.subscribeTag} ${subscriptions.some((s) => s.boardId === article.board?.id) ? styles.active : ''}`}
