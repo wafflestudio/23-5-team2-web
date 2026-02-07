@@ -127,7 +127,6 @@ const HomePage = () => {
 
   // Handle Select All
 
-
   const handleBoardCheck = (id: number, checked: boolean) => {
     let newIds: number[];
     if (checked) {
